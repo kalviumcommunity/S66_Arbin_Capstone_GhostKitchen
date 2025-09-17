@@ -68,17 +68,21 @@ export const getCombos = (req, res) => {
 // Add new food item
 export const addFoodItem = (req, res) => {
   try {
-    const { name, category, price, isBestSeller, type } = req.body;
+    let { name, category, price, isBestSeller, type } = req.body;
+
+    // ✅ Coerce numeric strings to numbers
+    if (price !== undefined) price = Number(price);
 
     // ✅ Strong validation
     if (
       typeof name !== 'string' ||
       typeof category !== 'string' ||
-      typeof price !== 'number' || isNaN(price) ||
-      typeof isBestSeller !== 'boolean' ||
+      isNaN(price) ||
       typeof type !== 'string'
     ) {
-      return res.status(400).json({ error: 'Invalid input types. Please check your payload.' });
+      return res.status(400).json({
+        error: 'Invalid input. Ensure name/category/type are strings and price is a valid number.',
+      });
     }
 
     const newFood = {
@@ -86,7 +90,7 @@ export const addFoodItem = (req, res) => {
       name,
       category,
       price,
-      isBestSeller,
+      isBestSeller: Boolean(isBestSeller), // ✅ Coerced to boolean
       type,
     };
 
@@ -113,7 +117,7 @@ export const updateFoodItem = (req, res) => {
       return res.status(404).json({ error: 'Food item not found' });
     }
 
-    const { name, category, price, isBestSeller, type } = req.body;
+    let { name, category, price, isBestSeller, type } = req.body;
     const food = foods[foodIndex];
 
     // ✅ Ensure at least one valid field is provided
@@ -137,11 +141,14 @@ export const updateFoodItem = (req, res) => {
       food.category = category;
     }
     if (price !== undefined) {
-      if (typeof price !== 'number' || isNaN(price)) return res.status(400).json({ error: 'Invalid price' });
+      price = Number(price); // ✅ allow numeric strings
+      if (isNaN(price)) return res.status(400).json({ error: 'Invalid price' });
       food.price = price;
     }
     if (isBestSeller !== undefined) {
-      if (typeof isBestSeller !== 'boolean') return res.status(400).json({ error: 'Invalid isBestSeller flag' });
+      if (typeof isBestSeller !== 'boolean') {
+        return res.status(400).json({ error: 'Invalid isBestSeller flag (must be boolean)' });
+      }
       food.isBestSeller = isBestSeller;
     }
     if (type !== undefined) {
