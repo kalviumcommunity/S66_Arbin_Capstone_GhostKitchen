@@ -1,25 +1,26 @@
+// backend/routes/foodRoutes.js
 import express from 'express';
 import {
   getAllFoods,
   getFoodsByCategory,
   getBestSellers,
   getCombos,
-  addFoodItem,       // ✅ Added for POST
-  updateFoodItem,    // ✅ Added for PUT
+  createFood,
+  updateFood,
 } from '../controllers/foodController.js';
 
 const router = express.Router();
 
-// GET routes
+// ================== GET Routes ==================
 router.get('/', getAllFoods);
-router.get('/category/:cat', getFoodsByCategory);
+router.get('/category/:category', getFoodsByCategory);
 router.get('/bestsellers', getBestSellers);
 router.get('/combos', getCombos);
 
-// POST route
-router.post('/', addFoodItem);   // ✅ New
+// ================== POST Route ==================
+router.post('/', createFood);
 
-// PUT route
-router.put('/:id', updateFoodItem);   // ✅ New
+// ================== PUT Route ==================
+router.put('/:id', updateFood);
 
 export default router;

@@ -1,163 +1,74 @@
-// Dummy data with one combo + sweet item added for consistency ✅
-const foods = [
-  { id: 1, name: 'Paneer Tikka', category: 'veg', price: 150, isBestSeller: true, type: 'combo' },
-  { id: 2, name: 'Chicken Biryani', category: 'non-veg', price: 200, isBestSeller: true, type: 'main' },
-  { id: 3, name: 'Gulab Jamun', category: 'dessert', price: 50, isBestSeller: false, type: 'sweet' },
-  { id: 4, name: 'Veg Combo Meal', category: 'veg', price: 180, isBestSeller: false, type: 'combo' },
-  { id: 5, name: 'Butter Chicken', category: 'non-veg', price: 220, isBestSeller: true, type: 'main' },
-];
+// backend/controllers/foodController.js
+import Food from "../models/foodModel.js";
 
-// ================== GET APIs ==================
-
-// GET all foods
-export const getAllFoods = (req, res) => {
+// ✅ GET all foods
+export const getAllFoods = async (req, res) => {
   try {
-    res.status(200).json(foods);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch foods' });
+    const foods = await Food.find();
+    res.json(foods);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch foods", error: error.message });
   }
 };
 
-// GET foods by category
-export const getFoodsByCategory = (req, res) => {
+// ✅ GET by category
+export const getFoodsByCategory = async (req, res) => {
   try {
-    const category = req.params.cat;
-    const filtered = foods.filter(food => food.category === category);
-
-    if (filtered.length === 0) {
-      return res.status(404).json({ message: `No foods found in category: ${category}` });
-    }
-
-    res.status(200).json(filtered);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch category items' });
+    const { category } = req.params;
+    const foods = await Food.find({ category });
+    res.json(foods);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch category foods", error: error.message });
   }
 };
 
-// GET bestsellers
-export const getBestSellers = (req, res) => {
+// ✅ GET Bestsellers
+export const getBestSellers = async (req, res) => {
   try {
-    const bestsellers = foods.filter(food => food.isBestSeller);
-
-    if (bestsellers.length === 0) {
-      return res.status(404).json({ message: 'No bestsellers found' });
-    }
-
-    res.status(200).json(bestsellers);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch bestsellers' });
+    const foods = await Food.find({ isBestSeller: true });
+    res.json(foods);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch bestsellers", error: error.message });
   }
 };
 
-// GET combos
-export const getCombos = (req, res) => {
+// ✅ GET Combos
+export const getCombos = async (req, res) => {
   try {
-    const combos = foods.filter(food => food.type === 'combo');
-
-    if (combos.length === 0) {
-      return res.status(404).json({ message: 'No combos found' });
-    }
-
-    res.status(200).json(combos);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch combos' });
+    // Assumes you store combos with type: "combo" in DB
+    const combos = await Food.find({ type: "combo" });
+    res.json(combos);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch combos", error: error.message });
   }
 };
 
-// ================== POST API ==================
-// Add new food item
-export const addFoodItem = (req, res) => {
+// ✅ POST - Add new food
+export const createFood = async (req, res) => {
   try {
-    let { name, category, price, isBestSeller, type } = req.body;
-
-    // ✅ Coerce numeric strings to numbers
-    if (price !== undefined) price = Number(price);
-
-    // ✅ Strong validation
-    if (
-      typeof name !== 'string' ||
-      typeof category !== 'string' ||
-      isNaN(price) ||
-      typeof type !== 'string'
-    ) {
-      return res.status(400).json({
-        error: 'Invalid input. Ensure name/category/type are strings and price is a valid number.',
-      });
-    }
-
-    const newFood = {
-      id: foods.length + 1,
-      name,
-      category,
-      price,
-      isBestSeller: Boolean(isBestSeller), // ✅ Coerced to boolean
-      type,
-    };
-
-    foods.push(newFood);
-    res.status(201).json({ message: 'Food item added successfully', food: newFood });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to add food item' });
+    const food = new Food(req.body);
+    const savedFood = await food.save();
+    res.status(201).json(savedFood);
+  } catch (error) {
+    res.status(400).json({ message: "Failed to create food", error: error.message });
   }
 };
 
-// ================== PUT API ==================
-// Update existing food item
-export const updateFoodItem = (req, res) => {
+// ✅ PUT - Update food
+export const updateFood = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const { id } = req.params;
+    const updatedFood = await Food.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-    // ✅ ID validation
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid food ID' });
-    }
-
-    const foodIndex = foods.findIndex(food => food.id === id);
-    if (foodIndex === -1) {
-      return res.status(404).json({ error: 'Food item not found' });
+    if (!updatedFood) {
+      return res.status(404).json({ message: "Food not found" });
     }
 
-    let { name, category, price, isBestSeller, type } = req.body;
-    const food = foods[foodIndex];
-
-    // ✅ Ensure at least one valid field is provided
-    if (
-      name === undefined &&
-      category === undefined &&
-      price === undefined &&
-      isBestSeller === undefined &&
-      type === undefined
-    ) {
-      return res.status(400).json({ error: 'No valid fields provided for update' });
-    }
-
-    // ✅ Validate and update fields only if correct type
-    if (name !== undefined) {
-      if (typeof name !== 'string') return res.status(400).json({ error: 'Invalid name' });
-      food.name = name;
-    }
-    if (category !== undefined) {
-      if (typeof category !== 'string') return res.status(400).json({ error: 'Invalid category' });
-      food.category = category;
-    }
-    if (price !== undefined) {
-      price = Number(price); // ✅ allow numeric strings
-      if (isNaN(price)) return res.status(400).json({ error: 'Invalid price' });
-      food.price = price;
-    }
-    if (isBestSeller !== undefined) {
-      if (typeof isBestSeller !== 'boolean') {
-        return res.status(400).json({ error: 'Invalid isBestSeller flag (must be boolean)' });
-      }
-      food.isBestSeller = isBestSeller;
-    }
-    if (type !== undefined) {
-      if (typeof type !== 'string') return res.status(400).json({ error: 'Invalid type' });
-      food.type = type;
-    }
-
-    res.status(200).json({ message: 'Food item updated successfully', food });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update food item' });
+    res.json(updatedFood);
+  } catch (error) {
+    res.status(400).json({ message: "Failed to update food", error: error.message });
   }
 };
