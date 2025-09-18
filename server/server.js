@@ -1,33 +1,39 @@
+// backend/server.js
 import express from "express";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 import foodRoutes from "./routes/foodRoutes.js";
-import { configDotenv } from "dotenv";
-configDotenv();
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
 
+// Middleware
 app.use(express.json());
-
-// ✅ Guard: check for missing MONGO_URI
-if (!MONGO_URI) {
-  console.error("❌ MONGO_URI not found in .env file. Please add it before starting the server.");
-  process.exit(1); // Stop the server immediately
-}
-
-// ✅ Connect to MongoDB
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected successfully 🚀"))
-  .catch((err) => {
-    console.error("MongoDB connection failed:", err);
-    process.exit(1); // Exit if DB connection fails
-  });
 
 // Routes
 app.use("/api/foods", foodRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} 🧟`);
+// Health route
+app.get("/", (req, res) => {
+  res.send("API is running...");
 });
+
+// DB connection
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI not found in environment variables");
+  process.exit(1); // Safe exit if no DB string
+}
+
+mongoose
+  .connect(MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected 🧟");
+    app.listen(PORT, () => console.log(`Server running on port ${PORT} 🚀`));
+  })
+  .catch((error) => {
+    console.error("❌ Failed to connect MongoDB:", process.env.NODE_ENV === "production" ? "Database connection error" : error.message);
+    process.exit(1); // Exit only at startup (prevents running without DB)
+  });
