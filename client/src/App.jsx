@@ -1,17 +1,20 @@
+// src/App.jsx
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import Menu from './pages/Menu';
-import OwnerLogin from './pages/OwnerLogin';
+import FoodList from './components/FoodList';
 
-export default function App() {
+function App() {
+  const foods = [
+    { id: 1, name: "Paneer Tikka", category: "Veg", type: "Starter", price: 199, isBestSeller: true },
+    { id: 2, name: "Chicken Biryani", category: "Non-Veg", type: "Main", price: 299, isBestSeller: false },
+    { id: 3, name: "Gulab Jamun", category: "Dessert", type: "Sweet", price: 99, isBestSeller: false },
+  ];
+
   return (
-    <div className="app">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="/owner" element={<OwnerLogin />} />
-      </Routes>
+    <div style={{padding: '2rem'}}>
+      <h1>Ghost Kitchen Menu</h1>
+      <FoodList foods={foods} />
     </div>
   );
 }
+
+export default App;
