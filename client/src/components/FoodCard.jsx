@@ -1,11 +1,13 @@
 import React from 'react';
+import { formatPrice } from '../utils/formatPrice'; // <-- new import
 
 export default function FoodCard({ food }) {
   return (
     <div className="card">
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <h3 style={{margin:0}}>{food.name}</h3>
-        <div className="small">₹{food.price}</div>
+        {/* Updated: using formatPrice instead of hardcoding ₹ */}
+        <div className="small">{formatPrice(food.price)}</div>
       </div>
       <p className="small" style={{marginTop:'0.5rem'}}>{food.category} • {food.type}</p>
       <div style={{display:'flex', justifyContent:'space-between', marginTop:'1rem', alignItems:'center'}}>
