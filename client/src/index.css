@@ -1,0 +1,21 @@
+:root {
+  --accent: #ff6f3c;
+  --bg: #fff;
+  --muted: #666;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #f7f7f8;
+  color: #111;
+}
+.app { min-height: 100vh; }
+.container { max-width: 980px; margin: 2rem auto; padding: 1rem; }
+.header { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; margin-top:1rem; }
+.button { padding:0.6rem 1rem; border:none; background:var(--accent); color:white; cursor:pointer; border-radius:6px; font-weight:600; }
+.card { background:white; border-radius:8px; padding:1rem; box-shadow:0 6px 18px rgba(2,6,23,0.06); }
+.small { color:var(--muted); font-size:0.9rem; }
+.filterRow { display:flex; gap:0.6rem; margin-top:1rem; flex-wrap:wrap; }
