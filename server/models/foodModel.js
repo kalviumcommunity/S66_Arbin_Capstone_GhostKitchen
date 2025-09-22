@@ -10,7 +10,7 @@ const foodSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ["veg", "non-veg", "dessert", "combo", "sweet", "main"], // ✅ restrict categories
+    enum: ["veg", "non-veg", "dessert", "combo", "sweet", "main", "bread"], // ✅ restrict categories
   },
   price: {
     type: Number,
