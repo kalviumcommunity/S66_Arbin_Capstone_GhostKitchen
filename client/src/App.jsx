@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from 'react';
 import FoodList from './components/FoodList';
 
@@ -12,7 +11,7 @@ function App() {
   return (
     <div style={{padding: '2rem'}}>
       <h1>Ghost Kitchen Menu</h1>
-      <FoodList foods={foods} />
+      <FoodList initialFoods={foods} />
     </div>
   );
 }
