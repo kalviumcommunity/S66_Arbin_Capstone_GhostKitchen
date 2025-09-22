@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import FoodCard from "./FoodCard";
 
-export default function FoodList({ foods: initialFoods }) {
+export default function FoodList({ foods: initialFoods = [] }) {
   const [foods, setFoods] = useState(initialFoods);
 
-  // ✅ FIX 2: Use functional updates
   const handleUpdate = (updatedFood) => {
     setFoods((prevFoods) =>
       prevFoods.map((f) => (f.id === updatedFood.id ? updatedFood : f))
@@ -17,14 +16,18 @@ export default function FoodList({ foods: initialFoods }) {
 
   return (
     <div className="food-list">
-      {foods.map((food) => (
-        <FoodCard
-          key={food.id}
-          food={food}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-        />
-      ))}
+      {foods.length > 0 ? (
+        foods.map((food) => (
+          <FoodCard
+            key={food.id}
+            food={food}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        ))
+      ) : (
+        <p>No food items available.</p> 
+      )}
     </div>
   );
 }
