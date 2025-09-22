@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
-import FoodCard from './FoodCard';
+import React, { useState } from "react";
+import FoodCard from "./FoodCard";
 
-export default function FoodList({ initialFoods }) {
+export default function FoodList({ foods: initialFoods }) {
   const [foods, setFoods] = useState(initialFoods);
 
+  // ✅ FIX 2: Use functional updates
   const handleUpdate = (updatedFood) => {
-    setFoods(foods.map((food) => food.id === updatedFood.id ? updatedFood : food));
+    setFoods((prevFoods) =>
+      prevFoods.map((f) => (f.id === updatedFood.id ? updatedFood : f))
+    );
   };
 
   const handleDelete = (id) => {
-    setFoods(foods.filter((food) => food.id !== id));
+    setFoods((prevFoods) => prevFoods.filter((f) => f.id !== id));
   };
 
   return (
-    <div style={{
-      display: 'grid',
-      gap: '1rem',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))'
-    }}>
+    <div className="food-list">
       {foods.map((food) => (
         <FoodCard
           key={food.id}

@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import { formatPrice } from '../utils/formatPrice';
+import React, { useState } from "react";
 
 export default function FoodCard({ food, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedFood, setEditedFood] = useState({ ...food });
 
+  // ✅ Validation check
+  const isValid =
+    editedFood.name.trim() !== "" &&
+    !isNaN(editedFood.price) &&
+    Number(editedFood.price) > 0;
+
   const handleSave = () => {
-    onUpdate(editedFood); // send updated food back to parent
+    if (isValid) {
+      onUpdate(editedFood);
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedFood({ ...food }); // reset to original
     setIsEditing(false);
   };
 
@@ -17,32 +29,47 @@ export default function FoodCard({ food, onUpdate, onDelete }) {
           <input
             type="text"
             value={editedFood.name}
-            onChange={(e) => setEditedFood({ ...editedFood, name: e.target.value })}
+            onChange={(e) =>
+              setEditedFood({ ...editedFood, name: e.target.value })
+            }
           />
           <input
             type="number"
             value={editedFood.price}
-            onChange={(e) => setEditedFood({ ...editedFood, price: Number(e.target.value) })}
+            onChange={(e) =>
+              setEditedFood({ ...editedFood, price: e.target.value })
+            }
           />
-          <button className="button" onClick={handleSave}>Save</button>
-          <button className="button" onClick={() => setIsEditing(false)}>Cancel</button>
+          <button onClick={handleSave} disabled={!isValid}>
+            Save
+          </button>
+          <button onClick={handleCancel}>Cancel</button>
         </>
       ) : (
         <>
-          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-            <h3 style={{margin:0}}>{food.name}</h3>
-            <div className="small">{formatPrice(food.price)}</div>
+          <div
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+          >
+            <h3 style={{ margin: 0 }}>{food.name}</h3>
+            <div className="small">₹{food.price}</div>
           </div>
-          <p className="small" style={{marginTop:'0.5rem'}}>
+          <p className="small" style={{ marginTop: "0.5rem" }}>
             {food.category} • {food.type}
           </p>
-          <div style={{display:'flex', justifyContent:'space-between', marginTop:'1rem', alignItems:'center'}}>
-            <div>
-              <button className="button" onClick={() => setIsEditing(true)}>Edit</button>
-              <button className="button" onClick={() => onDelete(food.id)} style={{marginLeft:'0.5rem', backgroundColor:'red'}}>Delete</button>
-            </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "1rem",
+              alignItems: "center",
+            }}
+          >
+            <button onClick={() => setIsEditing(true)}>Edit</button>
+            <button onClick={() => onDelete(food.id)}>Delete</button>
             {food.isBestSeller && (
-              <span style={{fontSize:'0.8rem', color:'var(--accent)'}}>Best Seller</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--accent)" }}>
+                Best Seller
+              </span>
             )}
           </div>
         </>
