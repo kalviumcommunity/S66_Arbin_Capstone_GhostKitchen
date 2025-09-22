@@ -1,19 +1,17 @@
-import React from 'react';
-import FoodList from './components/FoodList';
+import React from "react";
+import FoodList from "./components/FoodList";
 
-function App() {
-  const foods = [
-    { id: 1, name: "Paneer Tikka", category: "Veg", type: "Starter", price: 199, isBestSeller: true },
-    { id: 2, name: "Chicken Biryani", category: "Non-Veg", type: "Main", price: 299, isBestSeller: false },
-    { id: 3, name: "Gulab Jamun", category: "Dessert", type: "Sweet", price: 99, isBestSeller: false },
-  ];
+const initialFoods = [
+  { id: 1, name: "Paneer Tikka", price: 199, category: "Veg", type: "Starter", isBestSeller: true },
+  { id: 2, name: "Chicken Biryani", price: 299, category: "Non-Veg", type: "Main" },
+  { id: 3, name: "Gulab Jamun", price: 99, category: "Dessert", type: "Sweet" }
+];
 
+export default function App() {
   return (
-    <div style={{padding: '2rem'}}>
+    <div className="container">
       <h1>Ghost Kitchen Menu</h1>
-      <FoodList initialFoods={foods} />
+      <FoodList foods={initialFoods} /> 
     </div>
   );
 }
-
-export default App;
