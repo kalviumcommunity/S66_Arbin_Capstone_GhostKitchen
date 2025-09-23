@@ -5,7 +5,7 @@ import Food from "../models/foodModel.js";
 const VALID_CATEGORIES = ["veg", "non-veg", "dessert", "combo"];
 const VALID_TYPES = ["main", "side", "drink", "dessert"];
 
-// ✅ GET all foods
+
 export const getAllFoods = async (req, res) => {
   try {
     const foods = await Food.find();
