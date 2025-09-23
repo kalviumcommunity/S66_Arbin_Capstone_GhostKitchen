@@ -8,6 +8,8 @@ import {
   createFood,
   updateFood,
 } from '../controllers/foodController.js';
+import { deleteFood } from "../controllers/foodController.js";
+
 
 const router = express.Router();
 
@@ -22,5 +24,7 @@ router.post('/', createFood);
 
 // ================== PUT Route ==================
 router.put('/:id', updateFood);
+
+router.delete("/:id", deleteFood);
 
 export default router;
