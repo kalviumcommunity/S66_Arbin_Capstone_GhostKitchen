@@ -10,7 +10,11 @@ const foodSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ["veg", "non-veg", "dessert", "combo", "sweet", "main", "bread"], // ✅ restrict categories
+    enum: ["veg", "non-veg", "dessert", "combo", "sweet", "main", "bread"], // ✅ main categories
+  },
+  subcategory: {
+    type: String,
+    trim: true, // optional but nice to have
   },
   price: {
     type: Number,
@@ -20,11 +24,6 @@ const foodSchema = new mongoose.Schema({
   isBestSeller: {
     type: Boolean,
     default: false,
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ["combo", "main", "sweet"],
   },
 }, { timestamps: true });
 

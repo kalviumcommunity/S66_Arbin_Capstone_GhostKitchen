@@ -3,7 +3,9 @@ import express from "express";
 import mongoose from "mongoose";
 import foodRoutes from "./routes/foodRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import userRoutes from "./routes/userRoutes.js"; // ✅ Added user routes
 import { configDotenv } from "dotenv";
+
 configDotenv();
 
 const app = express();
@@ -29,9 +31,10 @@ mongoose
 
 // Routes
 app.use("/api/foods", foodRoutes);
-app.use("/api/orders", orderRoutes); // ✅ Added order routes
+app.use("/api/orders", orderRoutes);
+app.use("/api/users", userRoutes); // ✅ Register, Login, Logout
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} 🧟`);
 });
-
