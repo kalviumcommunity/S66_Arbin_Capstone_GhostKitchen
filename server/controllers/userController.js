@@ -3,12 +3,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
-// Generate JWT
+// ✅ Helper to generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
-// Register user
+// ✅ REGISTER USER
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -17,38 +17,49 @@ export const registerUser = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Invalid email format" });
     }
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
-    // Check existing
+    // ✅ Check if user exists
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: "User already exists" });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
-    // Hash password
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({ username, email, password: hashedPassword });
+    // ✅ Save user
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
 
-    // Create JWT & set cookie
+    // ✅ Create JWT + Secure cookie
     const token = generateToken(user._id);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // only HTTPS in prod
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
-    res.status(201).json({ message: "User registered successfully", user: { id: user._id, email: user.email } });
-  } catch (err) {
-    res.status(500).json({ message: "Registration failed", error: err.message });
+    res.status(201).json({
+      message: "User registered successfully",
+      user: { id: user._id, email: user.email },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Registration failed", error: error.message });
   }
 };
 
-// Login user
+// ✅ LOGIN USER
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -59,12 +70,16 @@ export const loginUser = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-    // Token
+    // ✅ Create JWT + Secure cookie
     const token = generateToken(user._id);
     res.cookie("token", token, {
       httpOnly: true,
@@ -74,12 +89,12 @@ export const loginUser = async (req, res) => {
     });
 
     res.json({ message: "Login successful" });
-  } catch (err) {
-    res.status(500).json({ message: "Login failed", error: err.message });
+  } catch (error) {
+    res.status(500).json({ message: "Login failed", error: error.message });
   }
 };
 
-// Logout user
+// ✅ LOGOUT USER
 export const logoutUser = (req, res) => {
   res.clearCookie("token");
   res.json({ message: "Logged out successfully" });
