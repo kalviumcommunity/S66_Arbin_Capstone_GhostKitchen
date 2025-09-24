@@ -1,30 +1,23 @@
 // backend/routes/foodRoutes.js
-import express from 'express';
+import express from "express";
 import {
   getAllFoods,
   getFoodsByCategory,
-  getBestSellers,
-  getCombos,
-  createFood,
+  addFood,
   updateFood,
-} from '../controllers/foodController.js';
-import { deleteFood } from "../controllers/foodController.js";
-
+  deleteFood,
+} from "../controllers/foodController.js";
+import { protect } from "../middleware/authMiddleware.js"; // ✅ middleware
 
 const router = express.Router();
 
-// ================== GET Routes ==================
-router.get('/', getAllFoods);
-router.get('/category/:category', getFoodsByCategory);
-router.get('/bestsellers', getBestSellers);
-router.get('/combos', getCombos);
+// Public routes
+router.get("/", getAllFoods);
+router.get("/:category", getFoodsByCategory);
 
-// ================== POST Route ==================
-router.post('/', createFood);
-
-// ================== PUT Route ==================
-router.put('/:id', updateFood);
-
-router.delete("/:id", deleteFood);
+// Protected routes (must be logged in)
+router.post("/", protect, addFood);
+router.put("/:id", protect, updateFood);
+router.delete("/:id", protect, deleteFood); // ✅ secured with middleware
 
 export default router;
