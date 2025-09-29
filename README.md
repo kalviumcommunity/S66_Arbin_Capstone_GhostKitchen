@@ -2,6 +2,8 @@
 
 ### [Frontend Link 🔮](https://ghost-kitchen-delta.vercel.app/)
 
+### [Backend Link 🔮](https://ghost-kitchen-server-nine.vercel.app/)
+
 ## 1. Project Overview
 **Ghost Kitchen** is a **Cloud Kitchen Management System** designed to simplify operations for kitchen owners specially. It provides a clean dashboard with **real-time order tracking, inventory management, sales analytics, and customer feedback**. The goal is to **reduce manual work** and enhance decision-making for kitchen owners through **automation and analytics**.
 
