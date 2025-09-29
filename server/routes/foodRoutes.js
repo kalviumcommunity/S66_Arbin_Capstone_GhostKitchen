@@ -7,7 +7,7 @@ import {
   updateFood,
   deleteFood,
 } from "../controllers/foodController.js";
-import { protect } from "../middleware/authMiddleware.js"; // ✅ middleware
+import protect  from "../middleware/authMiddleware.js"; // ✅ middleware
 
 const router = express.Router();
 

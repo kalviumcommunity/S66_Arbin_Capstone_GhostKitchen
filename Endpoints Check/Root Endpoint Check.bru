@@ -1,0 +1,15 @@
+meta {
+  name: Root Endpoint Check
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Get Combo Foods
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:5000/api/foods/combos
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

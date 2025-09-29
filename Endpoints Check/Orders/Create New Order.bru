@@ -1,0 +1,26 @@
+meta {
+  name: Create New Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/orders
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "customerName": "shivansh",
+    "foods": [
+      "68ca820342645663c07ecdfb",
+      "68d0155110f46819dac02af2"
+    ]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+}

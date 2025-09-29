@@ -1,0 +1,15 @@
+meta {
+  name: Get Desserts
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:5000/api/foods/dessert
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
