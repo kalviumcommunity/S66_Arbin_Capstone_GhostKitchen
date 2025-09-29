@@ -43,7 +43,7 @@ app.use("/api/users", userRoutes); // ✅ added
 
 // Default route
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.json("API is running...");
 });
 
 app.listen(PORT, () => {
