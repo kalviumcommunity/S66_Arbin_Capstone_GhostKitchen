@@ -3,70 +3,54 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
-// ✅ Helper to generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-};
-
-// ✅ REGISTER USER
+// ================= REGISTER =================
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // ✅ Input validation
+    // Validation
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
-    }
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
     }
 
-    // ✅ Check if user exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
     }
 
-    // ✅ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ✅ Save user
     const user = await User.create({
       username,
       email,
       password: hashedPassword,
     });
 
-    // ✅ Create JWT + Secure cookie
-    const token = generateToken(user._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // only HTTPS in prod
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
-
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: user._id, email: user.email },
+      userId: user._id,
     });
   } catch (error) {
-    res.status(500).json({ message: "Registration failed", error: error.message });
+    res.status(500).json({ message: "Register failed", error: error.message });
   }
 };
 
-// ✅ LOGIN USER
+// ================= LOGIN =================
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ✅ Validation
+    // Validation
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     const user = await User.findOne({ email });
@@ -79,13 +63,19 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // ✅ Create JWT + Secure cookie
-    const token = generateToken(user._id);
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing in .env file");
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 60 * 60 * 1000, // 1 hour
     });
 
     res.json({ message: "Login successful" });
@@ -94,8 +84,25 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// ✅ LOGOUT USER
-export const logoutUser = (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "Logged out successfully" });
+// ================= LOGOUT =================
+export const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+    res.json({ message: "Logout successful" });
+  } catch (error) {
+    res.status(500).json({ message: "Logout failed", error: error.message });
+  }
+};
+
+// ================= PROTECTED ROUTE CHECK =================
+export const getUserProfile = async (req, res) => {
+  try {
+    res.json({ message: "Welcome to your profile", user: req.user });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching profile", error: error.message });
+  }
 };

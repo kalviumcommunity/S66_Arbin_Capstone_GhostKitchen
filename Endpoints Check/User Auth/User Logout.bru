@@ -1,0 +1,15 @@
+meta {
+  name: User Logout
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:5000/api/users/logout
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

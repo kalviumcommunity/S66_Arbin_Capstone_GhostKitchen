@@ -1,0 +1,15 @@
+meta {
+  name: Get Veg Foods
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/api/foods/veg
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
