@@ -1,0 +1,15 @@
+meta {
+  name: Get All Orders
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/api/orders
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
