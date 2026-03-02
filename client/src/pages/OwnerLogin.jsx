@@ -1,12 +1,8 @@
-import React from "react";
-
-const OwnerLogin = () => {
+export default function OwnerLogin() {
   return (
-    <div>
-      <h1>Owner Login</h1>
-      <p>Login form for the kitchen owner will go here.</p>
-    </div>
+    <section className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h1 className="text-2xl font-bold text-slate-900">Owner Login</h1>
+      <p className="mt-2 text-sm text-slate-600">Owner auth form will be implemented in Phase 2.</p>
+    </section>
   );
-};
-
-export default OwnerLogin;
+}
