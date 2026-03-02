@@ -1,6 +1,8 @@
 import Order from "../models/orderModel.js";
 import Food from "../models/foodModel.js";
 
+const VALID_ORDER_STATUS = ["pending", "preparing", "ready", "completed", "cancelled"];
+
 // ✅ GET all orders with populated food details
 export const getAllOrders = async (req, res) => {
   try {
@@ -25,13 +27,15 @@ export const createOrder = async (req, res) => {
     }
 
     // Validate food IDs exist
-    const foodDocs = await Food.find({ _id: { $in: foods } });
-    if (foodDocs.length !== foods.length) {
+    const uniqueFoodIds = [...new Set(foods.map((foodId) => String(foodId)))];
+    const foodDocs = await Food.find({ _id: { $in: uniqueFoodIds } });
+    if (foodDocs.length !== uniqueFoodIds.length) {
       return res.status(400).json({ message: "One or more food IDs are invalid." });
     }
 
-    // Calculate total price
-    const totalPrice = foodDocs.reduce((sum, food) => sum + food.price, 0);
+    // Calculate total price (supports duplicate food IDs)
+    const priceMap = new Map(foodDocs.map((food) => [String(food._id), food.price]));
+    const totalPrice = foods.reduce((sum, foodId) => sum + (priceMap.get(String(foodId)) || 0), 0);
 
     // Create and save order
     const order = new Order({
@@ -47,12 +51,17 @@ export const createOrder = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 
 // ✅ DELETE - Delete full order
+=======
+// DELETE order
+>>>>>>> 0f7b9fb (bug fixes)
 export const deleteOrder = async (req, res) => {
   try {
     const { id } = req.params;
 
+<<<<<<< HEAD
     const order = await Order.findByIdAndDelete(id);
 
     if (!order) {
@@ -91,5 +100,41 @@ export const deleteOrderItem = async (req, res) => {
     res.json({ message: "Food item removed", order: updatedOrder });
   } catch (error) {
     res.status(500).json({ message: "Failed to remove food item", error: error.message });
+=======
+    const deletedOrder = await Order.findByIdAndDelete(id);
+    if (!deletedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json({ message: "Order deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ message: "Failed to delete order", error: error.message });
+  }
+};
+
+// PATCH order status
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status || !VALID_ORDER_STATUS.includes(status)) {
+      return res.status(400).json({ message: "Invalid status provided" });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    ).populate("foods");
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(updatedOrder);
+  } catch (error) {
+    res.status(400).json({ message: "Failed to update order status", error: error.message });
+>>>>>>> 0f7b9fb (bug fixes)
   }
 };

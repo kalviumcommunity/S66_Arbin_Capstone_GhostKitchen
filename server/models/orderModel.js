@@ -18,6 +18,11 @@ const orderSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+  status: {
+    type: String,
+    enum: ["pending", "preparing", "ready", "completed", "cancelled"],
+    default: "pending",
+  },
 }, { timestamps: true });
 
 const Order = mongoose.model("Order", orderSchema);
