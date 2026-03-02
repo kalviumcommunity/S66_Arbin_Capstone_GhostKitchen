@@ -26,3 +26,7 @@ dist-ssr
 *.sw?
 *.vercel
 *.env
+
+# Project documentation and tracking files
+roadmap.md
+CHANGES.md
