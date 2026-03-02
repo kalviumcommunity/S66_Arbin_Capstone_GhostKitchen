@@ -4,20 +4,18 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
+    "dev": "nodemon",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-<<<<<<< HEAD
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
-=======
     "cors": "^2.8.6",
->>>>>>> 0f7b9fb (bug fixes)
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
