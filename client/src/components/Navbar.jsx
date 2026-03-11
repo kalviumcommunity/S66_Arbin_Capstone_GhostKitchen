@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import UserMenu from "./UserMenu";
 
 const navLinkClass = ({ isActive }) =>
   `rounded-md px-3 py-2 text-sm font-medium ${
@@ -7,7 +8,8 @@ const navLinkClass = ({ isActive }) =>
   }`;
 
 export default function Navbar() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const isOwner = user?.role === "owner";
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -26,21 +28,28 @@ export default function Navbar() {
           <NavLink to="/cart" className={navLinkClass}>
             Cart
           </NavLink>
-          <NavLink to="/my-orders" className={navLinkClass}>
-            My Orders
-          </NavLink>
-          <NavLink to="/owner/dashboard" className={navLinkClass}>
-            Dashboard
-          </NavLink>
+          {isAuthenticated ? (
+            <NavLink to="/my-orders" className={navLinkClass}>
+              My Orders
+            </NavLink>
+          ) : null}
+
+          {isOwner ? (
+            <>
+              <NavLink to="/owner/dashboard" className={navLinkClass}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/owner/foods" className={navLinkClass}>
+                Foods
+              </NavLink>
+              <NavLink to="/owner/orders" className={navLinkClass}>
+                Orders
+              </NavLink>
+            </>
+          ) : null}
 
           {isAuthenticated ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="ml-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
-            >
-              Logout {user?.name ? `(${user.name})` : ""}
-            </button>
+            <UserMenu />
           ) : (
             <>
               <NavLink to="/login" className={navLinkClass}>

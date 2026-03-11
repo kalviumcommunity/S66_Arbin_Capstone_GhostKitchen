@@ -1,14 +1,11 @@
-// backend/controllers/userController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
-// ================= REGISTER =================
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Validation
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -18,13 +15,11 @@ export const registerUser = async (req, res) => {
         .json({ message: "Password must be at least 6 characters long" });
     }
 
-    // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -43,12 +38,10 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// ================= LOGIN =================
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -75,7 +68,7 @@ export const loginUser = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge: 60 * 60 * 1000, // 1 hour
+      maxAge: 60 * 60 * 1000,
     });
 
     res.json({ message: "Login successful" });
@@ -84,7 +77,6 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// ================= LOGOUT =================
 export const logoutUser = async (req, res) => {
   try {
     res.clearCookie("token", {
@@ -98,7 +90,6 @@ export const logoutUser = async (req, res) => {
   }
 };
 
-// ================= PROTECTED ROUTE CHECK =================
 export const getUserProfile = async (req, res) => {
   try {
     res.json({ message: "Welcome to your profile", user: req.user });

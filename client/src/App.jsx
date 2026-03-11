@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuthStore } from "./stores/authStore";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Home from "./pages/Home";
@@ -15,6 +17,12 @@ import OwnerFoods from "./pages/owner/Foods";
 import OwnerOrders from "./pages/owner/Orders";
 
 export default function App() {
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -24,7 +32,14 @@ export default function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/my-orders" element={<MyOrders />} />
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute>
+                <MyOrders />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/owner/login" element={<OwnerLogin />} />
@@ -32,7 +47,7 @@ export default function App() {
           <Route
             path="/owner/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="owner">
                 <OwnerDashboard />
               </ProtectedRoute>
             }
@@ -40,7 +55,7 @@ export default function App() {
           <Route
             path="/owner/foods"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="owner">
                 <OwnerFoods />
               </ProtectedRoute>
             }
@@ -48,7 +63,7 @@ export default function App() {
           <Route
             path="/owner/orders"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute role="owner">
                 <OwnerOrders />
               </ProtectedRoute>
             }

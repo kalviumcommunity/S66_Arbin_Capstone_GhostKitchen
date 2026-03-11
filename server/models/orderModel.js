@@ -1,15 +1,27 @@
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   customerName: {
     type: String,
     required: true,
     trim: true,
   },
+  phone: {
+    type: String,
+    trim: true,
+  },
+  address: {
+    type: String,
+    trim: true,
+  },
   foods: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Food", // ✅ Relationship with Food model
+      ref: "Food",
       required: true,
     },
   ],

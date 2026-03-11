@@ -14,7 +14,7 @@ export const getAllOrders = async (req, res) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { customerName, foods } = req.body;
+    const { customerName, foods, phone, address, userId } = req.body;
 
     if (!customerName || !foods || !Array.isArray(foods) || foods.length === 0) {
       return res.status(400).json({ message: "Invalid input. Provide customerName and at least one food ID." });
@@ -30,7 +30,7 @@ export const createOrder = async (req, res) => {
     const priceMap = new Map(foodDocs.map((food) => [String(food._id), food.price]));
     const totalPrice = foods.reduce((sum, foodId) => sum + (priceMap.get(String(foodId)) || 0), 0);
 
-    const order = new Order({ customerName, foods, totalPrice });
+    const order = new Order({ customerName, foods, totalPrice, phone, address, userId });
     const savedOrder = await order.save();
 
     res.status(201).json(await savedOrder.populate("foods"));

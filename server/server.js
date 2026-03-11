@@ -1,11 +1,10 @@
-// backend/server.js
 import express from "express";
 import mongoose from "mongoose";
-import cookieParser from "cookie-parser"; // ✅ needed for cookies
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import foodRoutes from "./routes/foodRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
-import userRoutes from "./routes/userRoutes.js"; // ✅ for register/login/logout
+import authRoutes from "./routes/authRoutes.js";
 import { configDotenv } from "dotenv";
 
 configDotenv();
@@ -15,12 +14,10 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-// ✅ Middleware
-app.use(cors({ origin: FRONTEND_URL }));
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
-app.use(cookieParser()); // 👈 ensures cookies can be read/written
+app.use(cookieParser());
 
-// ✅ Guard: check for missing ENV
 if (!MONGO_URI) {
   console.error("❌ MONGO_URI not found in .env file. Please add it.");
   process.exit(1);
@@ -30,7 +27,6 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-// ✅ Connect to MongoDB
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("MongoDB connected successfully 🚀"))
@@ -39,12 +35,10 @@ mongoose
     process.exit(1);
   });
 
-// Routes
 app.use("/api/foods", foodRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/users", userRoutes); // ✅ added
+app.use("/api/auth", authRoutes);
 
-// Default route
 app.get("/", (req, res) => {
   res.json("API is running...");
 });

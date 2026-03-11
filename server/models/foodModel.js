@@ -1,4 +1,3 @@
-// models/foodModel.js
 import mongoose from "mongoose";
 
 const foodSchema = new mongoose.Schema({
@@ -10,16 +9,16 @@ const foodSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ["veg", "non-veg", "dessert", "combo", "sweet", "main", "bread"], // ✅ main categories
+    enum: ["veg", "non-veg", "dessert", "combo", "sweet", "main", "bread"],
   },
   subcategory: {
     type: String,
-    trim: true, // optional but nice to have
+    trim: true,
   },
   price: {
     type: Number,
     required: true,
-    min: 0, // ✅ allows 0 but no negatives
+    min: 0,
   },
   isBestSeller: {
     type: Boolean,
