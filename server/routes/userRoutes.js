@@ -1,4 +1,3 @@
-// backend/routes/userRoutes.js
 import express from "express";
 import {
   registerUser,
@@ -13,6 +12,6 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
-router.get("/profile", protect, getUserProfile); // Protected
+router.get("/profile", protect, getUserProfile);
 
 export default router;
