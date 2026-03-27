@@ -2,13 +2,14 @@ import { useAuthStore } from "../stores/authStore";
 
 export default function UserMenu() {
   const { user, logout } = useAuthStore();
+  const displayName = user?.username || user?.email || "User";
+  const initial = displayName.trim().charAt(0).toUpperCase();
 
   return (
     <div className="ml-2 flex items-center gap-2">
-      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-        {user?.role || "user"}
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+        {initial}
       </span>
-      <span className="hidden text-sm text-slate-600 md:inline">{user?.username || user?.email}</span>
       <button
         type="button"
         onClick={logout}

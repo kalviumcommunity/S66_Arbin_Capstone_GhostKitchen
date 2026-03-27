@@ -12,8 +12,8 @@ Use this checklist to verify everything works after recent changes.
   - `npm run dev`
 
 Expected: ✅
-- Backend logs MongoDB connected and server port.
-- Frontend opens on `http://localhost:5173`.
+- Backend logs MongoDB connected and server port. ✅
+- Frontend opens on `http://localhost:5173`. ✅
 
 ## 2) Check environment files ✅
 
@@ -30,7 +30,7 @@ Use Postman/Bruno: ✅
 - `GET /api/foods` should return list. ✅
 - `GET /api/orders` without token should return unauthorized. ✅
 
-## 4) Phase 2 auth checks (API)
+## 4) Phase 2 auth checks (API) ✅
 
 ### Customer register ✅
 - `POST /api/auth/register` ✅
@@ -44,10 +44,10 @@ Use Postman/Bruno: ✅
   "address": "Test Address"
 }
 ```
-Expected: token + user object, role `customer`.
+Expected: token + user object, role `customer`. ✅
 
 ### Customer login ✅
-- `POST /api/auth/login`
+- `POST /api/auth/login` ✅
 - Body:
 ```json
 {
@@ -55,15 +55,15 @@ Expected: token + user object, role `customer`.
   "password": "123456"
 }
 ```
-Expected: token + user.
+Expected: token + user. ✅
 
 ### Get profile ✅
-- `GET /api/auth/me`
+- `GET /api/auth/me` ✅
 - Header: `Authorization: Bearer <token>`
-Expected: current user profile.
+Expected: current user profile. ✅
 
 ### Owner register ✅
-- `POST /api/auth/register`
+- `POST /api/auth/register` ✅
 - Body:
 ```json
 {
@@ -74,36 +74,129 @@ Expected: current user profile.
   "ownerCode": "<OWNER_REGISTRATION_CODE>"
 }
 ```
-Expected: role `owner`. Wrong `ownerCode` should fail.
+Expected: role `owner`. Wrong `ownerCode` should fail. ✅
 
-## 5) Owner route protection checks
+## 5) Owner route protection checks ✅
 
-Login as owner and customer separately.
+### Add food (owner only) ✅
+- i. CRUD + URL: `POST http://localhost:5000/api/foods` ✅
+- ii. Headers: `Authorization: Bearer <token>`, `Content-Type: application/json`
+- iii. Body (JSON):
+```json
+{
+  "name": "Paneer Tikka",
+  "category": "veg",
+  "price": 150,
+  "type": "main",
+  "isBestSeller": false
+}
+```
+- iv. Expected: customer token -> `403 Forbidden`, owner token -> success ✅
 
-- `POST /api/foods`
-  - Customer token -> should fail (403)
-  - Owner token -> should pass
-
-- `PATCH /api/orders/:id/status`
-  - Customer token -> should fail (403)
-  - Owner token -> should pass
+### Update order status (owner only) ✅
+- i. CRUD + URL: `PATCH http://localhost:5000/api/orders/:id/status` ✅
+- ii. Headers: `Authorization: Bearer <token>`, `Content-Type: application/json` 
+- iii. Body (JSON):
+```json
+{
+  "status": "preparing"
+}
+```
+- iv. Expected: 
+- customer token: `401 Unauthorized`-> if no user found ✅, `403 Forbidden` -> if user found but role doesn't match ✅
+-  owner token -> success ✅
 
 ## 6) Frontend auth checks
 
-- Open `/register`, create customer account, should redirect to menu.
-- Open `/login`, login as customer, should redirect to menu.
-- Open `/owner/login`, login with owner account, should redirect to owner dashboard.
-- Try opening `/owner/dashboard` as customer, should redirect to home.
-- Click logout from navbar, protected routes should no longer be accessible.
+### Customer register ✅
+- i. CRUD + URL: `GET http://localhost:5173/register` ✅
+- ii. Fields: form inputs `username`, `email`, `password`, `phone`, `address` ✅
+- iii. Body: N/A (form submit) ✅
+- iv. Expected: redirect to menu ✅
+
+### Customer login ✅
+- i. CRUD + URL: `GET http://localhost:5173/login` ✅
+- ii. Fields: form inputs `email`, `password` ✅
+- iii. Body: N/A (form submit) ✅
+- iv. Expected: redirect to menu ✅
+
+### Owner login
+- i. CRUD + URL: `GET http://localhost:5173/owner/login` ✅
+- ii. Fields: form inputs `email`, `password` ✅
+<!--- iii. Body: N/A (form submit)-->
+- iv. Expected: redirect to owner dashboard ✅
+
+### Owner dashboard protection
+- i. CRUD + URL: `GET http://localhost:5173/owner/dashboard` ✅
+- ii. Headers: N/A
+- iii. Body: N/A
+- iv. Expected: customer user redirects to home ✅
+
+### Logout check ✅
+- i. CRUD + URL: `GET http://localhost:5173/` (after logout) ✅
+- ii. Headers: N/A ✅
+- iii. Body: N/A ✅
+- iv. Expected: protected routes not accessible ✅
 
 ## 7) If something fails
 
-- Clear local storage key `gk_auth` in browser and try again.
-- Confirm backend `.env` values are correct.
-- Confirm backend is running before frontend requests.
-- Check backend terminal for exact error message.
-- Re-test endpoint directly in Postman to isolate frontend/backend issue.
+- Clear local storage key `gk_auth` and test again. ✅
+- Confirm backend `.env` has correct `PORT`, `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL`. ✅
+- Confirm backend is running at `http://localhost:5000` before frontend testing. ✅
+- Re-test API directly in Postman with: ✅
+  - URL: `http://localhost:5000/api/...` ✅
+  - Header: `Authorization: Bearer <token>` ✅
+  - Header: `Content-Type: application/json` ✅
 
 ## 8) Current resume point
 
-- Resume from: **Phase 2 testing pass and remaining auth refinements**.
+- Resume from: **Owner route protection re-check with full URL + headers + body format**.
+
+## 9) Phase 3 validation checklist
+
+### Cart and checkout flow
+- Route: `GET http://localhost:5173/menu` ✅
+- Action: click `Add` on one or more food cards ✅
+- Expected: cart count in navbar increases ✅
+
+- Route: `GET http://localhost:5173/cart` ✅
+- Action: verify item list, quantity `+/-`, remove, total ✅
+- Expected: totals update correctly ✅
+
+- Route: `GET http://localhost:5173/checkout` ✅
+- Header requirement: user must be logged in (customer or owner) ✅
+- Body source: form fields `customerName`, `phone`, `address` + cart items ✅
+- Expected: place order succeeds, redirect to `http://localhost:5173/order-success` ✅
+
+### Customer order APIs
+- i. CRUD + URL: `POST http://localhost:5000/api/orders` ✅
+- ii. Headers: `Authorization: Bearer <customer_token>`, `Content-Type: application/json` ✅
+- iii. Body (JSON):
+```json
+{
+  "customerName": "Test Customer",
+  "foods": ["<FOOD_ID_1>", "<FOOD_ID_2>"],
+  "phone": "9999999999",
+  "address": "Test Address"
+}
+```
+- iv. Expected: `201 Created` with order object, `userId` equals logged-in user ✅
+
+- i. CRUD + URL: `GET http://localhost:5000/api/orders/me` ✅
+- ii. Headers: `Authorization: Bearer <customer_token>` ✅
+- iii. Body: N/A
+- iv. Expected: only that customer's orders ✅
+
+- i. CRUD + URL: `GET http://localhost:5000/api/orders/me/:id` ✅
+- ii. Headers: `Authorization: Bearer <customer_token>` ✅
+- iii. Body: N/A
+- iv. Expected: selected order if owned by customer, otherwise `404` ✅
+
+### My Orders and reorder ✅
+- Route: `GET http://localhost:5173/my-orders` ✅
+- Action: verify status badge, items, total, date  
+- Expected: order list loads from `/api/orders/me` ✅
+
+- Route: `GET http://localhost:5173/my-orders` ✅
+- Action: click `Reorder` ✅
+- Expected: items are added back to cart ✅

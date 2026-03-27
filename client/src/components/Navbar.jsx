@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import { useCartStore } from "../stores/cartStore";
 import { useAuthStore } from "../stores/authStore";
 import UserMenu from "./UserMenu";
 
@@ -9,6 +10,7 @@ const navLinkClass = ({ isActive }) =>
 
 export default function Navbar() {
   const { isAuthenticated, user } = useAuthStore();
+  const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const isOwner = user?.role === "owner";
 
   return (
@@ -26,7 +28,7 @@ export default function Navbar() {
             Menu
           </NavLink>
           <NavLink to="/cart" className={navLinkClass}>
-            Cart
+            Cart {cartCount > 0 ? `(${cartCount})` : ""}
           </NavLink>
           {isAuthenticated ? (
             <NavLink to="/my-orders" className={navLinkClass}>
