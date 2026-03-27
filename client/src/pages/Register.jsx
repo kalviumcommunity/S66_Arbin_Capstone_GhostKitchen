@@ -16,6 +16,7 @@ export default function Register() {
     address: "",
   });
   const [localError, setLocalError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -64,14 +65,23 @@ export default function Register() {
           onChange={handleChange}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-500 focus:ring"
         />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-500 focus:ring"
-        />
+        <div className="relative">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 pr-12 text-sm outline-none ring-brand-500 focus:ring"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 hover:text-slate-700"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
         <input
           name="phone"
           placeholder="Phone (optional)"

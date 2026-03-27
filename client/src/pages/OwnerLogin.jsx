@@ -4,15 +4,14 @@ import { useAuthStore } from "../stores/authStore";
 
 export default function OwnerLogin() {
   const navigate = useNavigate();
-  const { login, logout, loading, error } = useAuthStore((state) => ({
-    login: state.login,
-    logout: state.logout,
-    loading: state.loading,
-    error: state.error,
-  }));
+  const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
+  const loading = useAuthStore((state) => state.loading);
+  const error = useAuthStore((state) => state.error);
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [localError, setLocalError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -54,14 +53,23 @@ export default function OwnerLogin() {
           onChange={handleChange}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-500 focus:ring"
         />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-500 focus:ring"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 pr-12 text-sm outline-none ring-brand-500 focus:ring"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 hover:text-slate-700"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         {localError || error ? (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{localError || error}</p>

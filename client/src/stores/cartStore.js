@@ -18,5 +18,18 @@ export const useCartStore = create((set, get) => ({
   removeItem: (foodId) => {
     set({ items: get().items.filter((item) => item._id !== foodId) });
   },
+  updateQuantity: (foodId, quantity) => {
+    const nextQty = Number(quantity);
+    if (!Number.isFinite(nextQty) || nextQty <= 0) {
+      set({ items: get().items.filter((item) => item._id !== foodId) });
+      return;
+    }
+
+    set({
+      items: get().items.map((item) =>
+        item._id === foodId ? { ...item, quantity: Math.floor(nextQty) } : item
+      ),
+    });
+  },
   clearCart: () => set({ items: [] }),
 }));

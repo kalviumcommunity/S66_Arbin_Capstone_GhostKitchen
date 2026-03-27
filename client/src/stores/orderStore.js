@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { createOrder, getOrders } from "../api/orders";
+import { createOrder, getMyOrders, getOrders } from "../api/orders";
 
 export const useOrderStore = create((set) => ({
   orders: [],
@@ -14,6 +14,18 @@ export const useOrderStore = create((set) => ({
       set({
         loading: false,
         error: error?.response?.data?.message || "Failed to load orders",
+      });
+    }
+  },
+  fetchMyOrders: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await getMyOrders();
+      set({ orders: data, loading: false });
+    } catch (error) {
+      set({
+        loading: false,
+        error: error?.response?.data?.message || "Failed to load your orders",
       });
     }
   },

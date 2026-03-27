@@ -14,10 +14,15 @@ export const getAllOrders = async (req, res) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { customerName, foods, phone, address, userId } = req.body;
+    const { customerName, foods, phone, address } = req.body;
+    const userId = req.user?._id;
 
-    if (!customerName || !foods || !Array.isArray(foods) || foods.length === 0) {
-      return res.status(400).json({ message: "Invalid input. Provide customerName and at least one food ID." });
+    if (!userId) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    if (!foods || !Array.isArray(foods) || foods.length === 0) {
+      return res.status(400).json({ message: "Invalid input. Provide at least one food ID." });
     }
 
     const uniqueFoodIds = [...new Set(foods.map((foodId) => String(foodId)))];
@@ -30,12 +35,46 @@ export const createOrder = async (req, res) => {
     const priceMap = new Map(foodDocs.map((food) => [String(food._id), food.price]));
     const totalPrice = foods.reduce((sum, foodId) => sum + (priceMap.get(String(foodId)) || 0), 0);
 
-    const order = new Order({ customerName, foods, totalPrice, phone, address, userId });
+    const normalizedCustomerName =
+      typeof customerName === "string" && customerName.trim() ? customerName.trim() : req.user.username;
+
+    const order = new Order({
+      customerName: normalizedCustomerName,
+      foods,
+      totalPrice,
+      phone,
+      address,
+      userId,
+    });
     const savedOrder = await order.save();
 
     res.status(201).json(await savedOrder.populate("foods"));
   } catch (error) {
     res.status(400).json({ message: "Failed to create order", error: error.message });
+  }
+};
+
+export const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.user._id }).populate("foods").sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch your orders", error: error.message });
+  }
+};
+
+export const getMyOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findOne({ _id: id, userId: req.user._id }).populate("foods");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ message: "Failed to fetch order", error: error.message });
   }
 };
 

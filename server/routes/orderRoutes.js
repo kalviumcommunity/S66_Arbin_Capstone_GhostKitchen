@@ -1,6 +1,8 @@
 import express from "express";
 import {
   getAllOrders,
+  getMyOrderById,
+  getMyOrders,
   createOrder,
   deleteOrder,
   updateOrderStatus,
@@ -11,7 +13,9 @@ import authorizeRoles from "../middleware/roleMiddleware.js";
 const router = express.Router();
 
 router.get("/", protect, authorizeRoles("owner"), getAllOrders);
-router.post("/", createOrder);
+router.get("/me", protect, authorizeRoles("customer", "owner"), getMyOrders);
+router.get("/me/:id", protect, authorizeRoles("customer", "owner"), getMyOrderById);
+router.post("/", protect, authorizeRoles("customer", "owner"), createOrder);
 router.patch("/:id/status", protect, authorizeRoles("owner"), updateOrderStatus);
 router.delete("/:id", protect, authorizeRoles("owner"), deleteOrder);
 

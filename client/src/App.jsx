@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Menu from "./pages/Menu";
 import MyOrders from "./pages/MyOrders";
 import NotFound from "./pages/NotFound";
+import OrderSuccess from "./pages/OrderSuccess";
 import OwnerLogin from "./pages/OwnerLogin";
 import Register from "./pages/Register";
 import OwnerDashboard from "./pages/owner/Dashboard";
@@ -31,7 +32,15 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/order-success" element={<OrderSuccess />} />
           <Route
             path="/my-orders"
             element={
