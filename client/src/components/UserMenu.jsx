@@ -6,7 +6,7 @@ export default function UserMenu() {
   const initial = displayName.trim().charAt(0).toUpperCase();
 
   return (
-    <div className="ml-2 flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
         {initial}
       </span>

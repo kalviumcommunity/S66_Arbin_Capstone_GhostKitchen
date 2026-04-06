@@ -48,7 +48,7 @@ export const getCombos = async (req, res) => {
 
 export const createFood = async (req, res) => {
   try {
-    const { name, category, price, isBestSeller, type } = req.body;
+    const { name, category, price, isBestSeller, type, stockQuantity, lowStockThreshold, unit, isAvailable } = req.body;
     const normalizedCategory = typeof category === "string" ? category.toLowerCase() : category;
     const normalizedType = typeof type === "string" ? type.toLowerCase() : type;
 
@@ -65,12 +65,29 @@ export const createFood = async (req, res) => {
       return res.status(400).json({ message: "Invalid type" });
     }
 
+    const normalizedStockQuantity = stockQuantity === undefined ? 0 : Number(stockQuantity);
+    if (!Number.isFinite(normalizedStockQuantity) || normalizedStockQuantity < 0) {
+      return res.status(400).json({ message: "stockQuantity must be a non-negative number" });
+    }
+
+    const normalizedLowStockThreshold = lowStockThreshold === undefined ? 5 : Number(lowStockThreshold);
+    if (!Number.isFinite(normalizedLowStockThreshold) || normalizedLowStockThreshold < 0) {
+      return res.status(400).json({ message: "lowStockThreshold must be a non-negative number" });
+    }
+
+    const normalizedUnit = typeof unit === "string" && unit.trim() ? unit.trim() : "portion";
+    const normalizedIsAvailable = isAvailable === undefined ? normalizedStockQuantity > 0 : Boolean(isAvailable);
+
     const food = new Food({
       name,
       category: normalizedCategory,
       price,
       isBestSeller,
       type: normalizedType,
+      stockQuantity: Math.floor(normalizedStockQuantity),
+      lowStockThreshold: Math.floor(normalizedLowStockThreshold),
+      unit: normalizedUnit,
+      isAvailable: normalizedIsAvailable,
     });
 
     const savedFood = await food.save();
@@ -83,7 +100,7 @@ export const createFood = async (req, res) => {
 export const updateFood = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, price, isBestSeller, type } = req.body;
+    const { name, category, price, isBestSeller, type, stockQuantity, lowStockThreshold, unit, isAvailable } = req.body;
 
     const updateData = {};
 
@@ -119,6 +136,37 @@ export const updateFood = async (req, res) => {
 
     if (isBestSeller !== undefined) {
       updateData.isBestSeller = Boolean(isBestSeller);
+    }
+
+    if (stockQuantity !== undefined) {
+      const normalizedStockQuantity = Number(stockQuantity);
+      if (!Number.isFinite(normalizedStockQuantity) || normalizedStockQuantity < 0) {
+        return res.status(400).json({ message: "stockQuantity must be a non-negative number" });
+      }
+      updateData.stockQuantity = Math.floor(normalizedStockQuantity);
+    }
+
+    if (lowStockThreshold !== undefined) {
+      const normalizedLowStockThreshold = Number(lowStockThreshold);
+      if (!Number.isFinite(normalizedLowStockThreshold) || normalizedLowStockThreshold < 0) {
+        return res.status(400).json({ message: "lowStockThreshold must be a non-negative number" });
+      }
+      updateData.lowStockThreshold = Math.floor(normalizedLowStockThreshold);
+    }
+
+    if (unit !== undefined) {
+      if (typeof unit !== "string" || !unit.trim()) {
+        return res.status(400).json({ message: "unit must be a non-empty string" });
+      }
+      updateData.unit = unit.trim();
+    }
+
+    if (isAvailable !== undefined) {
+      updateData.isAvailable = Boolean(isAvailable);
+    }
+
+    if (updateData.stockQuantity !== undefined && updateData.isAvailable === undefined) {
+      updateData.isAvailable = updateData.stockQuantity > 0;
     }
 
     const updatedFood = await Food.findByIdAndUpdate(id, updateData, {

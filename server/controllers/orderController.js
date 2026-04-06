@@ -1,5 +1,7 @@
 import Order from "../models/orderModel.js";
 import Food from "../models/foodModel.js";
+import InventoryHistory from "../models/inventoryHistoryModel.js";
+import { emitToOwners, emitToUser } from "../socket/socketServer.js";
 
 const VALID_ORDER_STATUS = ["pending", "preparing", "ready", "completed", "cancelled"];
 
@@ -33,6 +35,24 @@ export const createOrder = async (req, res) => {
     }
 
     const priceMap = new Map(foodDocs.map((food) => [String(food._id), food.price]));
+    const countByFoodId = foods.reduce((acc, foodId) => {
+      const key = String(foodId);
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    for (const foodDoc of foodDocs) {
+      const requiredQty = countByFoodId[String(foodDoc._id)] || 0;
+      const availableQty = Number(foodDoc.stockQuantity) || 0;
+      const canSell = foodDoc.isAvailable !== false;
+
+      if (!canSell || availableQty < requiredQty) {
+        return res.status(400).json({
+          message: `Insufficient stock for ${foodDoc.name}`,
+        });
+      }
+    }
+
     const totalPrice = foods.reduce((sum, foodId) => sum + (priceMap.get(String(foodId)) || 0), 0);
 
     const normalizedCustomerName =
@@ -48,7 +68,47 @@ export const createOrder = async (req, res) => {
     });
     const savedOrder = await order.save();
 
-    res.status(201).json(await savedOrder.populate("foods"));
+    for (const foodDoc of foodDocs) {
+      const qty = countByFoodId[String(foodDoc._id)] || 0;
+      if (!qty) continue;
+
+      const previousStock = Number(foodDoc.stockQuantity) || 0;
+      const newStock = Math.max(previousStock - qty, 0);
+
+      foodDoc.stockQuantity = newStock;
+      foodDoc.isAvailable = newStock > 0;
+      await foodDoc.save();
+
+      await InventoryHistory.create({
+        foodId: foodDoc._id,
+        changeType: "order_placed",
+        previousStock,
+        quantityChange: -qty,
+        newStock,
+        updatedBy: req.user?._id,
+        orderId: savedOrder._id,
+      });
+    }
+
+    const populatedOrder = await savedOrder.populate("foods");
+
+    emitToOwners("owner:order:new", {
+      order: populatedOrder,
+      message: `New order placed by ${populatedOrder.customerName}`,
+    });
+
+    emitToUser(userId, "customer:order:new", {
+      order: populatedOrder,
+      message: "Your order has been placed",
+    });
+
+    emitToOwners("inventory:changed", {
+      source: "order_placed",
+      orderId: savedOrder._id,
+      foodIds: foodDocs.map((foodDoc) => foodDoc._id),
+    });
+
+    res.status(201).json(populatedOrder);
   } catch (error) {
     res.status(400).json({ message: "Failed to create order", error: error.message });
   }
@@ -111,6 +171,16 @@ export const updateOrderStatus = async (req, res) => {
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    emitToOwners("owner:order:updated", {
+      order: updatedOrder,
+      message: `Order #${String(updatedOrder._id).slice(-6).toUpperCase()} moved to ${updatedOrder.status}`,
+    });
+
+    emitToUser(updatedOrder.userId, "customer:order:updated", {
+      order: updatedOrder,
+      message: `Your order status is now ${updatedOrder.status}`,
+    });
 
     res.json(updatedOrder);
   } catch (error) {

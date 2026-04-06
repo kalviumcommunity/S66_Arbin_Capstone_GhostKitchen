@@ -42,7 +42,7 @@ export default function OwnerLogin() {
   return (
     <section className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <h1 className="text-2xl font-bold text-slate-900">Owner Login</h1>
-      <p className="mt-2 text-sm text-slate-600">Only owner accounts can access the dashboard.</p>
+      <p className="mt-2 text-sm text-slate-600">Only owner accounts with configured owner credentials can access the dashboard.</p>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <input
