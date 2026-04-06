@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { getFoods } from "../api/foods";
+import { createFood, deleteFood, updateFood } from "../api/ownerFoods";
 
 const applyFilters = (foods, { search, category, sort }) => {
-  let next = [...foods];
+  let next = foods.filter((food) => food.isAvailable !== false && Number(food.stockQuantity || 0) > 0);
 
   if (category && category !== "all") {
     next = next.filter((food) => food.category === category);
@@ -83,6 +84,47 @@ export const useFoodStore = create((set, get) => ({
         search: state.search,
         category: state.category,
         sort,
+      }),
+    });
+  },
+  createFoodItem: async (payload) => {
+    const created = await createFood(payload);
+    const state = get();
+    const allFoods = [created, ...state.allFoods];
+    set({
+      allFoods,
+      foods: applyFilters(allFoods, {
+        search: state.search,
+        category: state.category,
+        sort: state.sort,
+      }),
+    });
+    return created;
+  },
+  updateFoodItem: async (foodId, payload) => {
+    const updated = await updateFood(foodId, payload);
+    const state = get();
+    const allFoods = state.allFoods.map((food) => (food._id === foodId ? updated : food));
+    set({
+      allFoods,
+      foods: applyFilters(allFoods, {
+        search: state.search,
+        category: state.category,
+        sort: state.sort,
+      }),
+    });
+    return updated;
+  },
+  deleteFoodItem: async (foodId) => {
+    await deleteFood(foodId);
+    const state = get();
+    const allFoods = state.allFoods.filter((food) => food._id !== foodId);
+    set({
+      allFoods,
+      foods: applyFilters(allFoods, {
+        search: state.search,
+        category: state.category,
+        sort: state.sort,
       }),
     });
   },
