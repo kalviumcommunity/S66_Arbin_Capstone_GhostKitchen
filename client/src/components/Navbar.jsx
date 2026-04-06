@@ -2,6 +2,8 @@ import { Link, NavLink } from "react-router-dom";
 import { useCartStore } from "../stores/cartStore";
 import { useAuthStore } from "../stores/authStore";
 import UserMenu from "./UserMenu";
+import LiveIndicator from "./LiveIndicator";
+import NotificationBell from "./NotificationBell";
 
 const navLinkClass = ({ isActive }) =>
   `rounded-md px-3 py-2 text-sm font-medium ${
@@ -9,34 +11,45 @@ const navLinkClass = ({ isActive }) =>
   }`;
 
 export default function Navbar() {
-  const { isAuthenticated, user } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const isOwner = user?.role === "owner";
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
         <Link to="/" className="text-lg font-bold text-slate-900">
           Ghost Kitchen
         </Link>
 
-        <nav className="flex items-center gap-1">
-          <NavLink to="/" className={navLinkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/menu" className={navLinkClass}>
-            Menu
-          </NavLink>
-          <NavLink to="/cart" className={navLinkClass}>
-            Cart {cartCount > 0 ? `(${cartCount})` : ""}
-          </NavLink>
-          {isAuthenticated ? (
-            <NavLink to="/my-orders" className={navLinkClass}>
-              My Orders
-            </NavLink>
+        <nav className="flex flex-wrap items-center gap-1">
+          {!isAuthenticated ? (
+            <>
+              <NavLink to="/" className={navLinkClass}>
+                Home
+              </NavLink>
+              <NavLink to="/customer" className={navLinkClass}>
+                Customer
+              </NavLink>
+            </>
           ) : null}
 
-          {isOwner ? (
+          {isAuthenticated && !isOwner ? (
+            <>
+              <NavLink to="/menu" className={navLinkClass}>
+                Menu
+              </NavLink>
+              <NavLink to="/cart" className={navLinkClass}>
+                Cart {cartCount > 0 ? `(${cartCount})` : ""}
+              </NavLink>
+              <NavLink to="/my-orders" className={navLinkClass}>
+                My Orders
+              </NavLink>
+            </>
+          ) : null}
+
+          {isAuthenticated && isOwner ? (
             <>
               <NavLink to="/owner/dashboard" className={navLinkClass}>
                 Dashboard
@@ -50,9 +63,7 @@ export default function Navbar() {
             </>
           ) : null}
 
-          {isAuthenticated ? (
-            <UserMenu />
-          ) : (
+          {!isAuthenticated ? (
             <>
               <NavLink to="/login" className={navLinkClass}>
                 Login
@@ -61,7 +72,11 @@ export default function Navbar() {
                 Register
               </NavLink>
             </>
-          )}
+          ) : null}
+
+          {isAuthenticated ? <UserMenu /> : null}
+          {isAuthenticated ? <LiveIndicator /> : null}
+          {isAuthenticated ? <NotificationBell /> : null}
         </nav>
       </div>
     </header>

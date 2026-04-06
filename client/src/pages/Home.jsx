@@ -1,81 +1,46 @@
 import { Link } from "react-router-dom";
-import { useEffect, useMemo } from "react";
-import { useFoodStore } from "../stores/foodStore";
-import { formatPrice } from "../utils/formatPrice";
+
+function ProfileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 20c0-3.2 3.6-5.2 8-5.2s8 2 8 5.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function Home() {
-  const allFoods = useFoodStore((state) => state.allFoods);
-  const fetchFoods = useFoodStore((state) => state.fetchFoods);
-
-  useEffect(() => {
-    if (!allFoods.length) {
-      fetchFoods();
-    }
-  }, [allFoods.length, fetchFoods]);
-
-  const bestsellers = useMemo(() => allFoods.filter((food) => food.isBestSeller).slice(0, 4), [allFoods]);
-  const categories = useMemo(() => Array.from(new Set(allFoods.map((food) => food.category))).slice(0, 6), [allFoods]);
-
   return (
-    <section className="space-y-8">
-      <div className="rounded-2xl bg-gradient-to-r from-brand-50 to-amber-50 p-8 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-900">Welcome to Ghost Kitchen</h1>
-        <p className="mt-3 max-w-2xl text-slate-600">
-          Fresh dishes from our cloud kitchen. Browse menu, add to cart, place order, and track status.
+    <section className="mx-auto max-w-4xl">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-brand-50 via-white to-amber-50 p-8 shadow-sm sm:p-10">
+        <h1 className="text-center text-3xl font-bold text-slate-900 sm:text-4xl">Welcome to Ghost Kitchen</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-slate-600">
+          Select your role to continue.
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <Link
-            to="/menu"
-            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            to="/customer"
+            className="group rounded-xl border border-slate-200 bg-white p-6 text-center transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
           >
-            Browse Menu
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+              <ProfileIcon />
+            </div>
+            <p className="mt-4 text-lg font-semibold text-slate-900">Customer</p>
+            <p className="mt-1 text-sm text-slate-600">Login or register to browse and place food orders.</p>
           </Link>
+
           <Link
             to="/owner/login"
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="group rounded-xl border border-slate-200 bg-white p-6 text-center transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md"
           >
-            Owner Dashboard
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+              <ProfileIcon />
+            </div>
+            <p className="mt-4 text-lg font-semibold text-slate-900">Owner</p>
+            <p className="mt-1 text-sm text-slate-600">Use authorized owner credentials to access analytics dashboard.</p>
           </Link>
         </div>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Top Categories</h2>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {categories.length ? (
-            categories.map((category) => (
-              <Link
-                key={category}
-                to="/menu"
-                className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200"
-              >
-                {category}
-              </Link>
-            ))
-          ) : (
-            <p className="text-sm text-slate-600">No categories yet.</p>
-          )}
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Best Sellers</h2>
-        {bestsellers.length ? (
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {bestsellers.map((food) => (
-              <div key={food._id} className="rounded-lg border border-slate-200 p-3">
-                <p className="text-sm font-semibold text-slate-900">{food.name}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {food.category} • {food.type}
-                </p>
-                <p className="mt-2 text-sm font-bold text-slate-900">{formatPrice(food.price)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-slate-600">No best sellers available yet.</p>
-        )}
       </div>
     </section>
   );

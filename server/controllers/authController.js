@@ -70,14 +70,55 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = String(email || "").toLowerCase().trim();
+    const ownerEmail = String(process.env.OWNER_LOGIN_EMAIL || "").toLowerCase().trim();
+    const ownerPassword = String(process.env.OWNER_LOGIN_PASSWORD || "");
 
     if (!email || !password) {
       return res.status(400).json({ message: "email and password are required" });
     }
 
-    const user = await User.findOne({ email: String(email).toLowerCase().trim() });
+    if (!ownerEmail || !ownerPassword) {
+      return res.status(500).json({ message: "Owner login credentials are not configured" });
+    }
+
+    if (normalizedEmail === ownerEmail) {
+      if (password !== ownerPassword) {
+        return res.status(401).json({ message: "Invalid owner credentials" });
+      }
+
+      let ownerUser = await User.findOne({ email: ownerEmail });
+
+      if (!ownerUser) {
+        const hashedOwnerPassword = await bcrypt.hash(ownerPassword, 10);
+        ownerUser = await User.create({
+          username: "Owner",
+          email: ownerEmail,
+          password: hashedOwnerPassword,
+          role: "owner",
+        });
+      } else if (ownerUser.role !== "owner") {
+        ownerUser.role = "owner";
+        ownerUser.password = await bcrypt.hash(ownerPassword, 10);
+        await ownerUser.save();
+      }
+
+      const token = getJwtToken(ownerUser._id);
+
+      return res.json({
+        message: "Login successful",
+        token,
+        user: sanitizeUser(ownerUser),
+      });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (user.role === "owner") {
+      return res.status(401).json({ message: "Invalid owner credentials" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

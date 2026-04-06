@@ -10,8 +10,8 @@ export default function OrderCard({ order, onReorder }) {
       </div>
 
       <div className="mt-3 space-y-2">
-        {order.foods?.map((food) => (
-          <div key={food._id} className="flex items-center justify-between text-sm">
+        {order.foods?.map((food, index) => (
+          <div key={`${order._id}-${food._id}-${index}`} className="flex items-center justify-between text-sm">
             <span className="text-slate-700">{food.name}</span>
             <span className="font-medium text-slate-900">{formatPrice(food.price)}</span>
           </div>
