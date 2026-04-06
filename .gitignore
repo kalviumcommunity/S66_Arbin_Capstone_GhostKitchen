@@ -32,3 +32,18 @@ roadmap.md
 CHANGES.md
 guidance.md
 issues.md
+
+# Environment and deployment
+**/.env
+**/.env.*
+!.env.example
+**/.vercel/
+
+# Build artifacts and cache
+coverage/
+*.tmp
+*.temp
+*.bak
+
+# Local runtime logs
+server/nodemon-debug.log

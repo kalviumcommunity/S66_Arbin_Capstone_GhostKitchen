@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useCartStore } from "../stores/cartStore";
 import OrderCard from "../components/OrderCard";
 import { useOrderStore } from "../stores/orderStore";
+import LiveIndicator from "../components/LiveIndicator";
 
 export default function MyOrders() {
   const orders = useOrderStore((state) => state.orders);
@@ -23,6 +24,9 @@ export default function MyOrders() {
     <section>
       <h1 className="text-2xl font-bold text-slate-900">My Orders</h1>
       <p className="mt-2 text-slate-600">Track your latest orders and status.</p>
+      <div className="mt-2">
+        <LiveIndicator />
+      </div>
 
       {loading ? <p className="mt-4 text-slate-600">Loading orders...</p> : null}
       {error ? <p className="mt-4 rounded-md bg-red-50 p-3 text-red-700">{error}</p> : null}

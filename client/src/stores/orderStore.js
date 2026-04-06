@@ -5,6 +5,19 @@ export const useOrderStore = create((set) => ({
   orders: [],
   loading: false,
   error: null,
+  setOrdersFromRealtime: (orders) => set({ orders }),
+  upsertOrderFromRealtime: (order) => {
+    if (!order?._id) return;
+    set((state) => {
+      const existing = state.orders.find((item) => item._id === order._id);
+      if (existing) {
+        return {
+          orders: state.orders.map((item) => (item._id === order._id ? order : item)),
+        };
+      }
+      return { orders: [order, ...state.orders] };
+    });
+  },
   fetchOrders: async () => {
     set({ loading: true, error: null });
     try {
