@@ -8,6 +8,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import { initializeSocket } from "./socket/socketServer.js";
 import { configDotenv } from "dotenv";
 
@@ -45,6 +46,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/", (req, res) => {
   res.json("API is running...");

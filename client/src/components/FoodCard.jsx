@@ -1,5 +1,6 @@
 import { useCartStore } from "../stores/cartStore";
 import { formatPrice } from "../utils/formatPrice";
+import StarRating from "./StarRating";
 
 export default function FoodCard({ food }) {
   const addItem = useCartStore((state) => state.addItem);
@@ -18,6 +19,11 @@ export default function FoodCard({ food }) {
       <p className="text-sm text-slate-500">
         {food.category} • {food.type}
       </p>
+
+      <div className="mt-2 flex items-center gap-2">
+        <StarRating rating={food.averageRating || 0} readOnly />
+        <span className="text-xs text-slate-500">({food.totalReviews || 0})</span>
+      </div>
 
       <div className="mt-4 flex items-center justify-between">
         <p className="text-lg font-bold text-slate-900">{formatPrice(food.price)}</p>

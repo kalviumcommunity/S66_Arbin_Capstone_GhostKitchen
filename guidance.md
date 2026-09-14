@@ -454,3 +454,107 @@ Run API checks in Postman/Bruno and UI checks in browser. ✅
 - Confirm token is fresh (login again to get new JWT). ✅
 - Confirm user role is correct for page being tested (`owner` for owner pages). ✅
 - Re-run tests in this order: 13.2 -> 13.3 -> 13.4 -> 13.5. ✅
+
+## 14) Phase 7: Review and rating checks
+
+Complete the checks below in order. Use a customer account for customer actions and an owner account for owner actions.
+
+### 14.1 Prepare the test data and tokens
+
+1. Start both servers as described in section 1.
+2. Log in as a customer through `http://localhost:5173/login`. Copy the JWT from the login response or browser storage and call it `CUSTOMER_TOKEN`.
+3. Log in as an owner through `http://localhost:5173/owner/login`. Copy the JWT and call it `OWNER_TOKEN`.
+4. Use a completed customer order that contains the food item you want to review. You will need the IDs of that food, the completed order, and the review created during the next step.
+5. In every protected API request, replace `<TOKEN>` with the correct token. For example:
+   `Authorization: Bearer eyJhbGciOi...`
+6. Replace every placeholder such as `<FOOD_ID>` with a real MongoDB ObjectId. Do not send the angle brackets or the placeholder text.
+
+Use these headers for requests that include JSON:
+```text
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+### 14.2 Create a review as a customer
+
+In Postman or Bruno, create a `POST` request to `http://localhost:5000/api/reviews`. Add the customer token and JSON content type, then enter this body after replacing both IDs:
+
+```json
+{
+  "foodId": "671234567890abcdef123456",
+  "orderId": "671234567890abcdef654321",
+  "rating": 5,
+  "comment": "The food was fresh, hot, and tasty."
+}
+```
+
+The IDs above are examples only. Use IDs from your own database. A successful request returns `201 Created` and a review object. Save its `_id` as `<REVIEW_ID>` for the next checks.
+
+Verify these validation cases as well:
+- Sending the same food and order again returns `409 Conflict` because one customer can review a food only once per order.
+- Using an order that is not `completed` returns `400 Bad Request`.
+- Using a food that is not included in the order returns `400 Bad Request`.
+
+### 14.3 Read reviews and rating statistics
+
+These two food endpoints are public, so they do not require an authorization header. Replace `<FOOD_ID>` with the same food ID used in section 14.2:
+
+- `GET http://localhost:5000/api/reviews/food/<FOOD_ID>` returns the reviews for that food.
+- `GET http://localhost:5000/api/reviews/food/<FOOD_ID>/stats` returns `averageRating`, `totalReviews`, and counts for ratings `1` through `5`.
+
+The customer reviews endpoint requires the customer token:
+
+- `GET http://localhost:5000/api/reviews/me` with `Authorization: Bearer <CUSTOMER_TOKEN>` returns only reviews written by that customer.
+
+### 14.4 Mark and unmark a review as helpful
+
+Send a `PATCH` request to `http://localhost:5000/api/reviews/<REVIEW_ID>/helpful` with a customer or owner token. Do not add a request body.
+
+The first request should increase `helpful` by one and return `isHelpfulByMe: true`. Send the same request again with the same token. The count should decrease by one and the response should return `isHelpfulByMe: false`.
+
+### 14.5 Respond to a review as an owner
+
+Send a `PATCH` request to `http://localhost:5000/api/reviews/<REVIEW_ID>/respond` using `Authorization: Bearer <OWNER_TOKEN>` and `Content-Type: application/json`.
+
+Enter this example body:
+```json
+{
+  "message": "Thank you for your feedback. We are glad you enjoyed your meal."
+}
+```
+
+The response should include the message under `ownerResponse.message` and a date under `ownerResponse.respondedAt`. A customer token must be rejected for this endpoint.
+
+### 14.6 Verify the customer pages
+
+1. Open `http://localhost:5173/my-orders` as the customer.
+2. Find a completed order and click `Write Review`.
+3. Select the completed order, select one food from that order, choose a rating from 1 to 5 stars, and enter a comment such as `Good portion and excellent taste.`
+4. Click `Submit Review`. The review should be saved successfully.
+5. Open `http://localhost:5173/my-reviews`. The new review should show its food, stars, comment, helpful count, and any owner response.
+6. Open `http://localhost:5173/menu`. Food cards should show their average star rating and review count.
+
+### 14.7 Verify the owner review page
+
+1. Open `http://localhost:5173/owner/reviews` as the owner.
+2. Select the food that was reviewed.
+3. Confirm that the customer review appears.
+4. Type a response such as `We appreciate your feedback and hope to serve you again.`
+5. Click `Send Response`. The saved response should appear on the review card.
+
+### 14.8 Confirm rating aggregation
+
+Send `GET http://localhost:5000/api/foods`. For a food with reviews, confirm that the response includes:
+
+- `averageRating`: the average score rounded to one decimal place.
+- `totalReviews`: the number of reviews for that food.
+- `ratingDistribution`: an object with keys `1`, `2`, `3`, `4`, and `5` and the count for each score.
+
+### 14.9 Troubleshooting
+
+- Confirm the backend is running on port `5000` and the frontend is running on port `5173`.
+- Confirm that each ID is a real 24-character MongoDB ObjectId copied from an API response.
+- Log in again if a token is expired or returns `401 Unauthorized`.
+- Use the customer token to create or view personal reviews and the owner token to respond.
+- Confirm that the order belongs to the logged-in customer and its status is exactly `completed`.
+- Repeat the checks in this order: 14.2, 14.3, 14.4, 14.5, 14.6, and 14.7.

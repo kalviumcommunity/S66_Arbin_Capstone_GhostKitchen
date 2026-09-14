@@ -48,6 +48,28 @@ const foodSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  averageRating: {
+    type: Number,
+    min: 0,
+    max: 5,
+    default: 0,
+  },
+  totalReviews: {
+    type: Number,
+    min: 0,
+    default: 0,
+  },
+  ratingDistribution: {
+    type: Map,
+    of: Number,
+    default: {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+    },
+  },
 }, { timestamps: true });
 
 const Food = mongoose.model("Food", foodSchema);
