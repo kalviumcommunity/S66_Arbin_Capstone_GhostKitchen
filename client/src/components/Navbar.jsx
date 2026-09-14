@@ -46,6 +46,9 @@ export default function Navbar() {
               <NavLink to="/my-orders" className={navLinkClass}>
                 My Orders
               </NavLink>
+              <NavLink to="/my-reviews" className={navLinkClass}>
+                My Reviews
+              </NavLink>
             </>
           ) : null}
 

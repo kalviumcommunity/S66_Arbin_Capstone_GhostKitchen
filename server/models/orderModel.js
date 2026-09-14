@@ -35,6 +35,15 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "preparing", "ready", "completed", "cancelled"],
     default: "pending",
   },
+  reviewedItems: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "Food",
+    default: [],
+  },
+  isFullyReviewed: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 const Order = mongoose.model("Order", orderSchema);

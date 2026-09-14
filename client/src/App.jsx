@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Menu from "./pages/Menu";
 import MyOrders from "./pages/MyOrders";
+import MyReviews from "./pages/MyReviews";
 import NotFound from "./pages/NotFound";
 import OrderSuccess from "./pages/OrderSuccess";
 import OwnerLogin from "./pages/OwnerLogin";
@@ -19,6 +20,7 @@ import OwnerDashboard from "./pages/owner/Dashboard";
 import OwnerFoods from "./pages/owner/Foods";
 import OwnerOrders from "./pages/owner/Orders";
 import OwnerInventory from "./pages/owner/Inventory";
+import OwnerReviews from "./pages/owner/Reviews";
 import NotificationToast from "./components/NotificationToast";
 import RealtimeBridge from "./components/RealtimeBridge";
 
@@ -62,6 +64,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/my-reviews"
+            element={
+              <ProtectedRoute>
+                <MyReviews />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={isAuthenticated ? <Navigate to={isOwner ? "/owner/dashboard" : "/menu"} replace /> : <Login />} />
           <Route
             path="/register"
@@ -85,6 +95,7 @@ export default function App() {
             <Route path="foods" element={<OwnerFoods />} />
             <Route path="orders" element={<OwnerOrders />} />
             <Route path="inventory" element={<OwnerInventory />} />
+            <Route path="reviews" element={<OwnerReviews />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -23,6 +23,9 @@ export default function OwnerLayout() {
           <NavLink to="/owner/inventory" className={linkClass}>
             Inventory
           </NavLink>
+          <NavLink to="/owner/reviews" className={linkClass}>
+            Reviews
+          </NavLink>
         </nav>
       </aside>
 
