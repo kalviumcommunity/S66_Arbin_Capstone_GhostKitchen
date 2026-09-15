@@ -4,6 +4,8 @@ import { getDashboardStats } from "../api/analytics";
 export const useAnalyticsStore = create((set) => ({
   stats: null,
   salesByStatus: [],
+  salesByDay: [],
+  topItems: [],
   latestOrders: [],
   loading: false,
   error: null,
@@ -14,6 +16,8 @@ export const useAnalyticsStore = create((set) => ({
       set({
         stats: data.stats,
         salesByStatus: data.salesByStatus || [],
+        salesByDay: data.salesByDay || [],
+        topItems: data.topItems || [],
         latestOrders: data.latestOrders || [],
         loading: false,
       });

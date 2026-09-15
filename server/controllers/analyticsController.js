@@ -15,10 +15,30 @@ export const getDashboardStats = async (req, res) => {
     const revenue = revenueAgg[0]?.total || 0;
     const completionRate = ordersCount ? Math.round((completedOrders / ordersCount) * 100) : 0;
 
-    const salesByStatusAgg = await Order.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-      { $project: { _id: 0, status: "$_id", count: 1 } },
-      { $sort: { count: -1 } },
+    const [salesByStatusAgg, salesByDay, topItems] = await Promise.all([
+      Order.aggregate([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+        { $project: { _id: 0, status: "$_id", count: 1 } },
+        { $sort: { count: -1 } },
+      ]),
+      Order.aggregate([
+        { $match: { status: { $ne: "cancelled" } } },
+        { $unwind: "$foods" },
+        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, revenue: { $sum: { $divide: ["$totalPrice", { $size: "$foods" }] } }, orders: { $sum: 1 } } },
+        { $project: { _id: 0, date: "$_id", revenue: { $round: ["$revenue", 2] }, orders: 1 } },
+        { $sort: { date: 1 } },
+        { $limit: 30 },
+      ]),
+      Order.aggregate([
+        { $match: { status: { $ne: "cancelled" } } },
+        { $unwind: "$foods" },
+        { $group: { _id: "$foods", quantity: { $sum: 1 } } },
+        { $sort: { quantity: -1 } },
+        { $limit: 5 },
+        { $lookup: { from: "foods", localField: "_id", foreignField: "_id", as: "food" } },
+        { $unwind: "$food" },
+        { $project: { _id: 0, name: "$food.name", quantity: 1 } },
+      ]),
     ]);
 
     res.json({
@@ -31,6 +51,8 @@ export const getDashboardStats = async (req, res) => {
         completionRate,
       },
       salesByStatus: salesByStatusAgg,
+      salesByDay,
+      topItems,
       latestOrders,
     });
   } catch (error) {
