@@ -2,10 +2,13 @@ import { useEffect } from "react";
 import StatCard from "../../components/owner/StatCard";
 import { useAnalyticsStore } from "../../stores/analyticsStore";
 import { formatPrice } from "../../utils/formatPrice";
+import DashboardCharts from "../../components/owner/DashboardCharts";
 
 export default function OwnerDashboard() {
   const stats = useAnalyticsStore((state) => state.stats);
   const salesByStatus = useAnalyticsStore((state) => state.salesByStatus);
+  const salesByDay = useAnalyticsStore((state) => state.salesByDay);
+  const topItems = useAnalyticsStore((state) => state.topItems);
   const latestOrders = useAnalyticsStore((state) => state.latestOrders);
   const loading = useAnalyticsStore((state) => state.loading);
   const error = useAnalyticsStore((state) => state.error);
@@ -33,6 +36,8 @@ export default function OwnerDashboard() {
           <StatCard label="Completion Rate" value={`${stats.completionRate}%`} />
         </div>
       ) : null}
+
+      <DashboardCharts salesByStatus={salesByStatus} salesByDay={salesByDay} topItems={topItems} />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

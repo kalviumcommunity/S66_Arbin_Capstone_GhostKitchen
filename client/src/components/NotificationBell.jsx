@@ -7,6 +7,8 @@ export default function NotificationBell() {
   const notifications = useNotificationStore((state) => state.notifications);
   const markAllRead = useNotificationStore((state) => state.markAllRead);
   const clearNotifications = useNotificationStore((state) => state.clearNotifications);
+  const browserNotifications = useNotificationStore((state) => state.browserNotifications);
+  const requestBrowserNotifications = useNotificationStore((state) => state.requestBrowserNotifications);
 
   return (
     <div className="relative">
@@ -39,6 +41,11 @@ export default function NotificationBell() {
               Clear
             </button>
           </div>
+          {typeof window !== "undefined" && "Notification" in window && !browserNotifications ? (
+            <button type="button" onClick={requestBrowserNotifications} className="mb-2 text-xs font-semibold text-teal-700 hover:text-teal-900">
+              Enable browser notifications
+            </button>
+          ) : null}
 
           {!notifications.length ? (
             <p className="text-xs text-slate-500">No recent alerts.</p>

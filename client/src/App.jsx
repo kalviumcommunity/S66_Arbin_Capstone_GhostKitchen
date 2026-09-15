@@ -13,6 +13,7 @@ import MyOrders from "./pages/MyOrders";
 import MyReviews from "./pages/MyReviews";
 import NotFound from "./pages/NotFound";
 import OrderSuccess from "./pages/OrderSuccess";
+import OrderTracking from "./pages/OrderTracking";
 import OwnerLogin from "./pages/OwnerLogin";
 import Register from "./pages/Register";
 import OwnerLayout from "./components/owner/OwnerLayout";
@@ -56,6 +57,7 @@ export default function App() {
             }
           />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
           <Route
             path="/my-orders"
             element={
