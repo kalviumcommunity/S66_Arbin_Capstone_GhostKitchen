@@ -24,12 +24,21 @@ import OwnerInventory from "./pages/owner/Inventory";
 import OwnerReviews from "./pages/owner/Reviews";
 import NotificationToast from "./components/NotificationToast";
 import RealtimeBridge from "./components/RealtimeBridge";
+import ThemeToggle from "./components/ThemeToggle";
+import { useThemeStore } from "./stores/themeStore";
 
 export default function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const theme = useThemeStore((state) => state.theme);
   const isOwner = user?.role === "owner";
+
+  useEffect(() => {
+    document.documentElement.classList.remove("theme-light", "theme-dark", "theme-night", "dark");
+    document.documentElement.classList.add(`theme-${theme}`);
+    if (theme !== "light") document.documentElement.classList.add("dark");
+  }, [theme]);
 
   useEffect(() => {
     checkAuth();
@@ -38,6 +47,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
+      <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-3"><ThemeToggle /></div>
       <RealtimeBridge />
       <main className="mx-auto w-full max-w-6xl px-4 py-8">
         <Routes>

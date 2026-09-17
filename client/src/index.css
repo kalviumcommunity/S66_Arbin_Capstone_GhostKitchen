@@ -4,8 +4,104 @@
 
 body {
   @apply m-0 min-h-screen bg-slate-50 text-slate-900;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 #root {
   @apply min-h-screen;
+}
+
+html.theme-dark,
+html.theme-night {
+  color-scheme: dark;
+}
+
+html.theme-dark body,
+html.theme-night body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+html.theme-dark .bg-white,
+html.theme-night .bg-white {
+  background-color: #1e293b;
+}
+
+html.theme-dark .bg-slate-50,
+html.theme-night .bg-slate-50 {
+  background-color: #0f172a;
+}
+
+html.theme-dark .bg-slate-100,
+html.theme-night .bg-slate-100 {
+  background-color: #334155;
+}
+
+html.theme-dark .bg-slate-200,
+html.theme-night .bg-slate-200 {
+  background-color: #475569;
+}
+
+html.theme-dark .text-slate-900,
+html.theme-night .text-slate-900 {
+  color: #f8fafc;
+}
+
+html.theme-dark .text-slate-700,
+html.theme-night .text-slate-700 {
+  color: #cbd5e1;
+}
+
+html.theme-dark .text-slate-600,
+html.theme-night .text-slate-600 {
+  color: #cbd5e1;
+}
+
+html.theme-dark .text-slate-500,
+html.theme-night .text-slate-500 {
+  color: #94a3b8;
+}
+
+html.theme-dark .border-slate-200,
+html.theme-night .border-slate-200,
+html.theme-dark .border-slate-300,
+html.theme-night .border-slate-300 {
+  border-color: #475569;
+}
+
+html.theme-dark input,
+html.theme-dark select,
+html.theme-dark textarea,
+html.theme-night input,
+html.theme-night select,
+html.theme-night textarea {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+
+html.theme-dark input::placeholder,
+html.theme-dark textarea::placeholder,
+html.theme-night input::placeholder,
+html.theme-night textarea::placeholder {
+  color: #94a3b8;
+}
+
+html.theme-night body {
+  background: #080d1c;
+}
+
+html.theme-night .bg-white {
+  background-color: #111a32;
+}
+
+html.theme-night .bg-slate-50 {
+  background-color: #080d1c;
+}
+
+html.theme-night .bg-slate-100 {
+  background-color: #17213d;
+}
+
+html.theme-night .bg-slate-200 {
+  background-color: #243252;
 }
