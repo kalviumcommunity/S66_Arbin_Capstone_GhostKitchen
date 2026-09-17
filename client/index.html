@@ -4,9 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>Ghost Kitchen</title>
   </head>
   <body>
+    <script>
+      (() => {
+        const theme = localStorage.getItem('gk_theme') || 'light';
+        const selectedTheme = ['light', 'dark', 'night'].includes(theme) ? theme : 'light';
+        document.documentElement.classList.add(`theme-${selectedTheme}`);
+        if (selectedTheme !== 'light') document.documentElement.classList.add('dark');
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
