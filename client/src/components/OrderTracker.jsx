@@ -18,7 +18,7 @@ export default function OrderTracker({ order }) {
       </div>
 
       {cancelled ? <p className="mt-6 rounded-md bg-rose-50 p-3 text-sm text-rose-700">This order was cancelled.</p> : (
-        <div className="mt-8 grid grid-cols-4 gap-2">
+        <div className="mt-8 grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-4">
           {statuses.map((status, index) => (
             <div key={status} className="text-center">
               <div className={`mx-auto h-4 w-4 rounded-full ${index <= currentIndex ? "bg-teal-600" : "bg-slate-200"}`} />

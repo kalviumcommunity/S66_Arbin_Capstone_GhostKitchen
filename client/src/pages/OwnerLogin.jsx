@@ -40,7 +40,7 @@ export default function OwnerLogin() {
   };
 
   return (
-    <section className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h1 className="text-2xl font-bold text-slate-900">Owner Login</h1>
       <p className="mt-2 text-sm text-slate-600">Only owner accounts with configured owner credentials can access the dashboard.</p>
 

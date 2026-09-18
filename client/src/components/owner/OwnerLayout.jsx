@@ -7,10 +7,10 @@ const linkClass = ({ isActive }) =>
 
 export default function OwnerLayout() {
   return (
-    <section className="grid gap-6 lg:grid-cols-[240px,1fr]">
+    <section className="grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-[240px,minmax(0,1fr)]">
       <aside className="h-fit rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Owner Panel</h2>
-        <nav className="flex flex-col gap-1">
+        <nav className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
           <NavLink to="/owner/dashboard" className={linkClass}>
             Dashboard
           </NavLink>

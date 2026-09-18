@@ -18,12 +18,12 @@ export default function Navbar() {
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
-        <Link to="/" className="text-lg font-bold text-slate-900">
+      <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 px-4 py-3 sm:px-6 md:flex-row md:items-center md:justify-between">
+        <Link to="/" className="shrink-0 text-lg font-bold text-slate-900">
           Ghost Kitchen
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-1">
+        <nav className="flex min-w-0 max-w-full items-center gap-1 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
           {!isAuthenticated ? (
             <>
               <NavLink to="/" className={navLinkClass}>

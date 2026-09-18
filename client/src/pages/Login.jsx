@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function Login() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const googleLogin = useAuthStore((state) => state.googleLogin);
   const loading = useAuthStore((state) => state.loading);
   const authError = useAuthStore((state) => state.error);
 
@@ -37,8 +39,18 @@ export default function Login() {
     }
   };
 
+  const handleGoogleLogin = async (credential) => {
+    setLocalError("");
+    try {
+      const data = await googleLogin(credential);
+      navigate(data.user?.role === "owner" ? "/owner/dashboard" : "/menu");
+    } catch (error) {
+      setLocalError(error.message);
+    }
+  };
+
   return (
-    <section className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h1 className="text-2xl font-bold text-slate-900">Customer Login</h1>
       <p className="mt-2 text-sm text-slate-600">Login to place orders and track your profile.</p>
 
@@ -92,6 +104,13 @@ export default function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+
+      <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
+        <span className="h-px flex-1 bg-slate-200" />
+        <span>OR</span>
+        <span className="h-px flex-1 bg-slate-200" />
+      </div>
+      <GoogleLoginButton onSuccess={handleGoogleLogin} disabled={loading} />
 
       <p className="mt-4 text-sm text-slate-600">
         New here?{" "}
