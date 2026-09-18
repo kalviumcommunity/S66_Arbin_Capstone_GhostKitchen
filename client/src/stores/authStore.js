@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getMe, login as loginApi, register as registerApi } from "../api/auth";
+import { getMe, googleLogin as googleLoginApi, login as loginApi, register as registerApi } from "../api/auth";
 
 const initialAuth = {
   user: null,
@@ -57,6 +57,27 @@ export const useAuthStore = create((set, get) => ({
       return data;
     } catch (error) {
       const message = error?.response?.data?.message || "Login failed";
+      set({ loading: false, error: message });
+      throw new Error(message);
+    }
+  },
+
+  googleLogin: async (credential) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await googleLoginApi(credential);
+      const next = {
+        user: data.user,
+        token: data.token,
+        isAuthenticated: Boolean(data.token),
+        loading: false,
+        error: null,
+      };
+      persistAuth(next);
+      set(next);
+      return data;
+    } catch (error) {
+      const message = error?.response?.data?.message || "Google login failed";
       set({ loading: false, error: message });
       throw new Error(message);
     }

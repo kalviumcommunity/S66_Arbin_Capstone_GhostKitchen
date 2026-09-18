@@ -7,6 +7,21 @@
 ## 1. Project Overview
 **Ghost Kitchen** is a **Cloud Kitchen Management System** designed to simplify operations for kitchen owners specially. It provides a clean dashboard with **real-time order tracking, inventory management, sales analytics, and customer feedback**. The goal is to **reduce manual work** and enhance decision-making for kitchen owners through **automation and analytics**.
 
+## Current Implementation Status
+
+The application currently includes:
+
+- Customer authentication, menu browsing, cart, checkout, order history, reorder, and reviews.
+- Owner authentication, food and order management, inventory tracking, review responses, and analytics.
+- Real-time order and inventory updates through Socket.IO.
+- Live customer order tracking at `/order-tracking`.
+- Owner dashboard charts for revenue trends, order status, and top-selling items.
+- Persisted Light, Dark, and Night themes.
+
+The next development focus is Phase 8: automated testing, security hardening, monitoring, performance optimization, and production documentation.
+
+Google sign-in requires a Google OAuth web client ID configured as `GOOGLE_CLIENT_ID` on the server and `VITE_GOOGLE_CLIENT_ID` on the client. See `guidance.md` for local setup and validation steps.
+
 <br>
 
 ## 2. Objectives

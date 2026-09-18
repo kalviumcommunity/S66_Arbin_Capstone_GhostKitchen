@@ -23,7 +23,7 @@ export default function WriteReviewModal({ open, onClose, orderOptions = [], onS
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl">
+       <div className="max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-4 shadow-xl sm:p-5">
         <h2 className="text-lg font-semibold text-slate-900">Write a Review</h2>
 
         <form

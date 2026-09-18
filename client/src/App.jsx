@@ -45,11 +45,11 @@ export default function App() {
   }, [checkAuth]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50">
       <Navbar />
       <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-3"><ThemeToggle /></div>
       <RealtimeBridge />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8">
         <Routes>
           <Route path="/" element={isAuthenticated ? <Navigate to={isOwner ? "/owner/dashboard" : "/menu"} replace /> : <Home />} />
           <Route

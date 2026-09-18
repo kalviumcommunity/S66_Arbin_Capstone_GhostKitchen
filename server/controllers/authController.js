@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const getJwtToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -135,6 +138,59 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Login failed", error: error.message });
+  }
+};
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ message: "Google login is not configured" });
+    }
+
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential is required" });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload?.sub || !payload.email || payload.email_verified !== true) {
+      return res.status(401).json({ message: "Google account could not be verified" });
+    }
+
+    const normalizedEmail = payload.email.toLowerCase().trim();
+    let user = await User.findOne({ $or: [{ googleId: payload.sub }, { email: normalizedEmail }] });
+
+    if (user?.role === "owner") {
+      return res.status(403).json({ message: "Google login is available for customer accounts only" });
+    }
+
+    if (!user) {
+      user = await User.create({
+        username: String(payload.name || normalizedEmail.split("@")[0]).trim(),
+        email: normalizedEmail,
+        authProvider: "google",
+        googleId: payload.sub,
+      });
+    } else {
+      user.googleId = payload.sub;
+      user.authProvider = "google";
+      if (!user.username && payload.name) user.username = String(payload.name).trim();
+      await user.save();
+    }
+
+    res.json({
+      message: "Google login successful",
+      token: getJwtToken(user._id),
+      user: sanitizeUser(user),
+    });
+  } catch {
+    res.status(401).json({ message: "Google login failed" });
   }
 };
 
