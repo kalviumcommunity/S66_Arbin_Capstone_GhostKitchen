@@ -37,7 +37,7 @@ export default function FoodFormModal({ open, onClose, onSubmit, food }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-lg">
+      <div className="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-4 shadow-lg sm:p-5">
         <h2 className="text-lg font-semibold text-slate-900">{food ? "Edit Food" : "Add Food"}</h2>
 
         <form
@@ -65,7 +65,7 @@ export default function FoodFormModal({ open, onClose, onSubmit, food }) {
             required
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <select
               value={form.category}
               onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
@@ -101,7 +101,7 @@ export default function FoodFormModal({ open, onClose, onSubmit, food }) {
             required
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <input
               type="number"
               min="0"
