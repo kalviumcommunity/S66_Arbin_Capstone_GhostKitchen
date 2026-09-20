@@ -12,6 +12,8 @@ export default function OwnerInventory() {
 
   const [draftById, setDraftById] = useState({});
   const [actionError, setActionError] = useState("");
+  const [historyFilter, setHistoryFilter] = useState("all");
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
 
   useEffect(() => {
     fetchInventory();
@@ -37,6 +39,8 @@ export default function OwnerInventory() {
       setActionError(err?.response?.data?.message || err.message || "Failed to update stock");
     }
   };
+
+  const visibleHistory = history.filter((entry) => historyFilter === "all" || entry.changeType === historyFilter).slice(0, 12);
 
   return (
     <section>
@@ -108,22 +112,71 @@ export default function OwnerInventory() {
             </table>
           </div>
 
-          <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Inventory History</h2>
-            {!history.length ? (
-              <p className="mt-2 text-sm text-slate-600">No stock history yet.</p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {history.slice(0, 12).map((entry) => (
-                  <div key={entry._id} className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-700">
-                    <span className="font-semibold text-slate-900">{entry.foodId?.name || "Unknown item"}</span>
-                    {" "}
-                    {entry.quantityChange >= 0 ? "+" : ""}
-                    {entry.quantityChange} | {entry.previousStock} {"->"} {entry.newStock} | {entry.changeType}
-                  </div>
-                ))}
-              </div>
-            )}
+           <section className="inventory-history mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+               <div>
+                 <h2 className="text-lg font-semibold text-slate-900">Recent Inventory History</h2>
+                 <p className="mt-1 text-xs text-slate-500">Tap an update to see more detail.</p>
+               </div>
+               <div className="flex rounded-lg bg-slate-100 p-1" role="group" aria-label="Filter inventory history">
+                 {["all", "manual_adjustment", "order_placed"].map((filter) => (
+                   <button
+                     key={filter}
+                     type="button"
+                     onClick={() => setHistoryFilter(filter)}
+                     className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
+                       historyFilter === filter
+                         ? "bg-white text-slate-900 shadow-sm"
+                         : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
+                     }`}
+                   >
+                     {filter === "all" ? "All" : filter === "manual_adjustment" ? "Updates" : "Orders"}
+                   </button>
+                 ))}
+               </div>
+             </div>
+             {!history.length ? (
+               <p className="mt-2 text-sm text-slate-600">No stock history yet.</p>
+             ) : !visibleHistory.length ? (
+               <p className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">No entries in this filter.</p>
+             ) : (
+               <div className="mt-3 space-y-2">
+                 {visibleHistory.map((entry) => {
+                   const isExpanded = expandedHistoryId === entry._id;
+                   const isIncrease = entry.quantityChange >= 0;
+
+                   return (
+                     <button
+                       key={entry._id}
+                       type="button"
+                       onClick={() => setExpandedHistoryId(isExpanded ? null : entry._id)}
+                       className="inventory-history-item w-full rounded-lg border border-transparent bg-slate-50 px-3 py-3 text-left text-xs text-slate-700 transition hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50 hover:shadow-sm"
+                       aria-expanded={isExpanded}
+                     >
+                       <div className="flex items-center gap-3">
+                         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${isIncrease ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                           {isIncrease ? "+" : "-"}
+                         </span>
+                         <span className="min-w-0 flex-1">
+                           <span className="block truncate font-semibold text-slate-900">{entry.foodId?.name || "Unknown item"}</span>
+                           <span className="mt-0.5 block text-slate-500">{entry.previousStock} {"->"} {entry.newStock}</span>
+                         </span>
+                         <span className={`shrink-0 font-bold ${isIncrease ? "text-emerald-600" : "text-rose-600"}`}>
+                           {entry.quantityChange >= 0 ? "+" : ""}{entry.quantityChange}
+                         </span>
+                         <span className={`text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} aria-hidden="true">⌄</span>
+                       </div>
+                       {isExpanded ? (
+                         <span className="mt-3 block border-t border-slate-200 pt-3 text-slate-500">
+                           {entry.note || "Stock level updated"}
+                           {entry.createdAt ? ` · ${new Date(entry.createdAt).toLocaleString()}` : ""}
+                         </span>
+                       ) : null}
+                     </button>
+                   );
+                 })}
+               </div>
+             )}
           </section>
         </>
       ) : null}
