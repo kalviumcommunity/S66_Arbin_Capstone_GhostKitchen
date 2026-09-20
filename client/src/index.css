@@ -11,6 +11,46 @@ body {
   @apply min-h-screen;
 }
 
+.home-panel {
+  background-size: 180% 180%;
+  animation: home-gradient 14s ease-in-out infinite alternate;
+}
+
+.home-title {
+  animation: home-title-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-subtitle {
+  animation: home-fade-up 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-role-card {
+  animation: home-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-role-card:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.home-role-card:hover {
+  box-shadow: 0 16px 30px -18px rgb(15 23 42 / 45%);
+}
+
+@keyframes home-gradient {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 100%; }
+}
+
+@keyframes home-title-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes home-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 html.theme-dark,
 html.theme-night {
   color-scheme: dark;
@@ -104,4 +144,27 @@ html.theme-night .bg-slate-100 {
 
 html.theme-night .bg-slate-200 {
   background-color: #243252;
+}
+
+html.theme-dark .home-panel {
+  background-image: linear-gradient(135deg, #1e293b, #172033, #292524);
+  border-color: #475569;
+}
+
+html.theme-night .home-panel {
+  background-image: linear-gradient(135deg, #17213d, #111a32, #2a1f35);
+  border-color: #33466e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-panel,
+  .home-title,
+  .home-subtitle,
+  .home-role-card {
+    animation: none;
+  }
+
+  .home-role-card {
+    transition: none;
+  }
 }
