@@ -29,7 +29,7 @@ export default function OwnerLayout() {
         </nav>
       </aside>
 
-      <div>
+      <div className="min-w-0">
         <Outlet />
       </div>
     </section>
