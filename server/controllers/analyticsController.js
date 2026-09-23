@@ -23,9 +23,18 @@ export const getDashboardStats = async (req, res) => {
       ]),
       Order.aggregate([
         { $match: { status: { $ne: "cancelled" } } },
-        { $unwind: "$foods" },
-        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, revenue: { $sum: { $divide: ["$totalPrice", { $size: "$foods" }] } }, orders: { $sum: 1 } } },
-        { $project: { _id: 0, date: "$_id", revenue: { $round: ["$revenue", 2] }, orders: 1 } },
+        { $set: { normalizedFoods: { $cond: [{ $isArray: "$foods" }, "$foods", []] } } },
+        { $set: { foodCount: { $size: "$normalizedFoods" } } },
+        { $match: { foodCount: { $gt: 0 } } },
+        { $unwind: "$normalizedFoods" },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            revenue: { $sum: { $divide: ["$totalPrice", "$foodCount"] } },
+            orderIds: { $addToSet: "$_id" },
+          },
+        },
+        { $project: { _id: 0, date: "$_id", revenue: { $round: ["$revenue", 2] }, orders: { $size: "$orderIds" } } },
         { $sort: { date: 1 } },
         { $limit: 30 },
       ]),
