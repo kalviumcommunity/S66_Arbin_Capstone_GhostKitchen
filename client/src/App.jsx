@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuthStore } from "./stores/authStore";
@@ -28,6 +28,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import { useThemeStore } from "./stores/themeStore";
 
 export default function App() {
+  const location = useLocation();
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
@@ -44,12 +45,14 @@ export default function App() {
     checkAuth();
   }, [checkAuth]);
 
+  const isOwnerRoute = location.pathname.startsWith("/owner");
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-50">
-      <Navbar />
-      <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-3"><ThemeToggle /></div>
+    <div className={`min-h-screen overflow-x-hidden ${isOwnerRoute ? "owner-app" : "bg-slate-50"}`}>
+      {!isOwnerRoute ? <Navbar /> : null}
+      {!isOwnerRoute ? <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-3"><ThemeToggle /></div> : null}
       <RealtimeBridge />
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8">
+      <main className={isOwnerRoute ? "owner-main" : "mx-auto w-full max-w-6xl px-4 py-6 sm:py-8"}>
         <Routes>
           <Route path="/" element={isAuthenticated ? <Navigate to={isOwner ? "/owner/dashboard" : "/menu"} replace /> : <Home />} />
           <Route
