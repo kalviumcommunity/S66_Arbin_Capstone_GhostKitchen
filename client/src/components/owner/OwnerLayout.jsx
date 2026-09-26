@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 const Icon = ({ name }) => {
   const paths = {
@@ -25,6 +25,9 @@ const navItems = [
 const linkClass = ({ isActive }) => `owner-nav-item ${isActive ? "is-active" : ""}`;
 
 export default function OwnerLayout() {
+  const location = useLocation();
+  const currentPage = location.pathname.split("/").filter(Boolean).pop() || "dashboard";
+  const pageLabel = currentPage.charAt(0).toUpperCase() + currentPage.slice(1);
   return (
     <section className="owner-shell">
       <aside className="owner-sidebar">
@@ -36,7 +39,7 @@ export default function OwnerLayout() {
       </aside>
 
       <div className="owner-content">
-        <header className="owner-header"><div className="owner-breadcrumb"><span>Workspace</span><b>/</b><strong>Dashboard</strong></div><div className="owner-header-actions"><label className="owner-search"><span>⌕</span><input aria-label="Search dashboard" placeholder="Search anything..." /></label><button className="header-icon" aria-label="Notifications" type="button">♢<i /></button><button className="header-icon" aria-label="Settings" type="button"><Icon name="settings" /></button><div className="profile"><span className="profile-avatar">AM</span><span><b>Alex Morgan</b><small>Administrator</small></span><span className="chevron">⌄</span></div></div></header>
+        <header className="owner-header"><div className="owner-breadcrumb"><span>Workspace</span><b>/</b><strong>{pageLabel}</strong></div><div className="owner-header-actions"><label className="owner-search"><span>⌕</span><input aria-label="Search dashboard" placeholder="Search anything..." /></label><button className="header-icon" aria-label="Notifications" type="button">♢<i /></button><button className="header-icon" aria-label="Settings" type="button"><Icon name="settings" /></button><div className="profile"><span className="profile-avatar">AM</span><span><b>Alex Morgan</b><small>Administrator</small></span><span className="chevron">⌄</span></div></div></header>
         <Outlet />
       </div>
     </section>
