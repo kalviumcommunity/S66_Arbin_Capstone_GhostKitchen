@@ -21,6 +21,7 @@ import OwnerDashboard from "./pages/owner/Dashboard";
 import OwnerFoods from "./pages/owner/Foods";
 import OwnerOrders from "./pages/owner/Orders";
 import OwnerMessages from "./pages/owner/Messages";
+import OwnerCalendar from "./pages/owner/Calendar";
 import OwnerInventory from "./pages/owner/Inventory";
 import OwnerReviews from "./pages/owner/Reviews";
 import NotificationToast from "./components/NotificationToast";
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="foods" element={<OwnerFoods />} />
             <Route path="orders" element={<OwnerOrders />} />
             <Route path="messages" element={<OwnerMessages />} />
+            <Route path="calendar" element={<OwnerCalendar />} />
             <Route path="inventory" element={<OwnerInventory />} />
             <Route path="reviews" element={<OwnerReviews />} />
           </Route>

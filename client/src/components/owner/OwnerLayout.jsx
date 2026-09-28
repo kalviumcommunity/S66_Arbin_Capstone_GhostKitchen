@@ -17,7 +17,7 @@ const Icon = ({ name }) => {
 
 const navItems = [
   ["Dashboard", "/owner/dashboard", "grid"], ["Orders", "/owner/orders", "bag"],
-  ["Messages", "/owner/messages", "chat"], ["Calendar", "/owner/dashboard", "calendar"],
+  ["Messages", "/owner/messages", "chat"], ["Calendar", "/owner/calendar", "calendar"],
   ["Menu", "/owner/foods", "utensils"], ["Inventory", "/owner/inventory", "box"],
   ["Purchase Orders", "/owner/dashboard", "clipboard"], ["Reviews", "/owner/reviews", "star"],
 ];
