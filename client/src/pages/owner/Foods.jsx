@@ -1,148 +1,52 @@
-import { useEffect, useState } from "react";
-import FoodFormModal from "../../components/owner/FoodFormModal";
+import { useEffect, useMemo, useState } from "react";
 import { useFoodStore } from "../../stores/foodStore";
-import { formatPrice } from "../../utils/formatPrice";
+
+const categories = ["All", "Breakfast", "Lunch", "Dinner", "Chicken", "Seafood", "Pasta", "Burgers", "Desserts", "Beverages"];
+const demoFoods = [
+  { _id: "demo-pasta", name: "Truffle Mushroom Pasta", category: "Pasta", description: "Handmade tagliatelle, wild mushrooms, parmesan cream, and fresh herbs.", price: 18, averageRating: 4.9, totalReviews: 342, isAvailable: true, promotion: "Chef's pick", image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=640&q=85" },
+  { _id: "demo-burger", name: "Crispy Chicken Burger", category: "Chicken", description: "Buttermilk fried chicken, house slaw, pickles, and smoked aioli.", price: 14.5, averageRating: 4.8, totalReviews: 289, isAvailable: true, promotion: "Buy 1 Get 1", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=640&q=85" },
+  { _id: "demo-bowl", name: "Salmon Avocado Bowl", category: "Seafood", description: "Miso salmon, avocado, edamame, pickled ginger, and jasmine rice.", price: 16, averageRating: 4.7, totalReviews: 214, isAvailable: true, promotion: "Seasonal", image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=640&q=85" },
+  { _id: "demo-pizza", name: "Garden Margherita", category: "Dinner", description: "San Marzano tomato, fior di latte, basil oil, and cracked pepper.", price: 15, averageRating: 4.6, totalReviews: 190, isAvailable: true, promotion: "", image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=640&q=85" },
+  { _id: "demo-cake", name: "Chocolate Lava Cake", category: "Desserts", description: "Warm dark chocolate cake, vanilla bean ice cream, and sea salt.", price: 9, averageRating: 4.9, totalReviews: 166, isAvailable: true, promotion: "Member Offer", image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=640&q=85" },
+  { _id: "demo-coffee", name: "Citrus Cold Brew", category: "Beverages", description: "Small-batch cold brew, orange peel, vanilla, and tonic.", price: 7.5, averageRating: 4.5, totalReviews: 121, isAvailable: false, promotion: "", image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=640&q=85" },
+];
+
+const initialForm = { name: "", description: "", category: "Pasta", price: "", preparation: "20 min", ingredients: "", dietary: "", availability: true, promotion: "None", tax: "8.5", image: "" };
+const displayCategory = (value) => { const normalized = String(value || "").toLowerCase(); return normalized === "non-veg" ? "Chicken" : normalized === "dessert" ? "Desserts" : normalized === "sweet" ? "Desserts" : normalized === "main" ? "Dinner" : normalized || "Dinner"; };
+const normalizeFood = (food, index) => ({ ...food, category: food.category?.length > 2 ? displayCategory(food.category) : "Dinner", description: food.description || "A carefully prepared Hearth & Table favorite with seasonal ingredients.", averageRating: Number(food.averageRating || 4.6), totalReviews: Number(food.totalReviews || (120 + index * 13)), image: food.image || demoFoods[index % demoFoods.length].image, promotion: food.promotion || "", isAvailable: food.isAvailable !== false });
+
+function FoodIcon({ type }) {
+  const paths = { search: "m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z", plus: "M12 5v14M5 12h14", close: "M6 6l12 12M18 6 6 18", image: "M4 5h16v14H4zM4 16l4-4 3 3 3-4 6 5M8 9h.01", more: "M5 12h.01M12 12h.01M19 12h.01" };
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type]} /></svg>;
+}
 
 export default function OwnerFoods() {
   const foods = useFoodStore((state) => state.allFoods);
-  const loading = useFoodStore((state) => state.loading);
-  const error = useFoodStore((state) => state.error);
   const fetchFoods = useFoodStore((state) => state.fetchFoods);
   const createFoodItem = useFoodStore((state) => state.createFoodItem);
   const updateFoodItem = useFoodStore((state) => state.updateFoodItem);
   const deleteFoodItem = useFoodStore((state) => state.deleteFoodItem);
-
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [search, setSearch] = useState("");
+  const [price, setPrice] = useState("All prices");
+  const [rating, setRating] = useState("All ratings");
+  const [availability, setAvailability] = useState("All items");
+  const [promotion, setPromotion] = useState("All promotions");
+  const [openMenu, setOpenMenu] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingFood, setEditingFood] = useState(null);
-  const [actionError, setActionError] = useState("");
+  const [editing, setEditing] = useState(null);
+  const [localFoods, setLocalFoods] = useState(demoFoods);
+  const [form, setForm] = useState(initialForm);
 
-  useEffect(() => {
-    fetchFoods();
-  }, [fetchFoods]);
+  useEffect(() => { fetchFoods(); }, [fetchFoods]);
+  const sourceFoods = foods.length ? foods.map(normalizeFood) : localFoods;
+  const visibleFoods = useMemo(() => sourceFoods.filter((food) => { const matchesSearch = !search || `${food.name} ${food.description} ${food.category}`.toLowerCase().includes(search.toLowerCase()); const matchesCategory = activeCategory === "All" || food.category === activeCategory; const matchesPrice = price === "All prices" || (price === "Under $10" && food.price < 10) || (price === "$10–$20" && food.price >= 10 && food.price <= 20) || (price === "$20–$30" && food.price > 20 && food.price <= 30) || (price === "Above $30" && food.price > 30); const matchesRating = rating === "All ratings" || (rating === "5 stars" && food.averageRating >= 4.9) || (rating === "4+ stars" && food.averageRating >= 4) || (rating === "3+ stars" && food.averageRating >= 3); const matchesAvailability = availability === "All items" || (availability === "Available" && food.isAvailable) || (availability === "Sold Out" && !food.isAvailable); const matchesPromotion = promotion === "All promotions" || (promotion === "Discount" && food.promotion?.toLowerCase().includes("discount")) || food.promotion === promotion; return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesAvailability && matchesPromotion; }), [sourceFoods, search, activeCategory, price, rating, availability, promotion]);
 
-  const openCreate = () => {
-    setEditingFood(null);
-    setModalOpen(true);
-  };
+  const openCreate = () => { setEditing(null); setForm(initialForm); setModalOpen(true); setOpenMenu(null); };
+  const openEdit = (food) => { setEditing(food); setForm({ ...initialForm, name: food.name, description: food.description, category: food.category, price: String(food.price), availability: food.isAvailable, promotion: food.promotion || "None", image: food.image }); setModalOpen(true); setOpenMenu(null); };
+  const saveItem = async (event) => { event.preventDefault(); const payload = { name: form.name.trim(), category: form.category.toLowerCase(), type: "main", price: Number(form.price), isAvailable: form.availability, stockQuantity: 20, lowStockThreshold: 5, unit: "portion", isBestSeller: Boolean(form.promotion) }; if (editing && !String(editing._id).startsWith("demo-") && !String(editing._id).startsWith("local-")) await updateFoodItem(editing._id, payload); else if (editing) { const nextItem = { ...editing, ...payload, description: form.description, image: form.image || editing.image, category: form.category, promotion: form.promotion === "None" ? "" : form.promotion }; setLocalFoods((current) => String(editing._id).startsWith("local-copy-") ? [nextItem, ...current] : current.map((item) => item._id === editing._id ? nextItem : item)); } else if (foods.length) await createFoodItem(payload); else setLocalFoods((current) => [{ ...payload, ...normalizeFood({ ...payload, _id: `local-${Date.now()}`, description: form.description, image: form.image }, 0), promotion: form.promotion === "None" ? "" : form.promotion }, ...current]); setModalOpen(false); setEditing(null); };
+  const deleteItem = async (food) => { setOpenMenu(null); if (!String(food._id).startsWith("demo-") && !String(food._id).startsWith("local-")) await deleteFoodItem(food._id); else setLocalFoods((current) => current.filter((item) => item._id !== food._id)); };
+  const toggleAvailability = async (food) => { setOpenMenu(null); if (!String(food._id).startsWith("demo-") && !String(food._id).startsWith("local-")) await updateFoodItem(food._id, { ...food, isAvailable: !food.isAvailable, category: food.category.toLowerCase(), type: "main" }); else setLocalFoods((current) => current.map((item) => item._id === food._id ? { ...item, isAvailable: !item.isAvailable } : item)); };
 
-  const openEdit = (food) => {
-    setEditingFood(food);
-    setModalOpen(true);
-  };
-
-  const handleSave = async (payload) => {
-    setActionError("");
-    try {
-      if (editingFood) {
-        await updateFoodItem(editingFood._id, payload);
-      } else {
-        await createFoodItem(payload);
-      }
-      setModalOpen(false);
-      setEditingFood(null);
-    } catch (err) {
-      setActionError(err?.response?.data?.message || "Failed to save food");
-    }
-  };
-
-  const handleDelete = async (foodId) => {
-    setActionError("");
-    try {
-      await deleteFoodItem(foodId);
-    } catch (err) {
-      setActionError(err?.response?.data?.message || "Failed to delete food");
-    }
-  };
-
-  return (
-    <section>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Manage Foods</h1>
-          <p className="mt-1 text-slate-600">Create, edit, and remove menu items.</p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-        >
-          Add Food
-        </button>
-      </div>
-
-      {actionError ? <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{actionError}</p> : null}
-      {loading ? <p className="text-slate-600">Loading foods...</p> : null}
-      {error ? <p className="mb-4 rounded-md bg-red-50 p-3 text-red-700">{error}</p> : null}
-
-      {!loading && !error ? (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Stock</th>
-                <th className="px-4 py-3">Best Seller</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {foods.map((food) => (
-                <tr key={food._id}>
-                  <td className="px-4 py-3 font-medium text-slate-900">{food.name}</td>
-                  <td className="px-4 py-3 text-slate-700">{food.category}</td>
-                  <td className="px-4 py-3 text-slate-700">{food.type}</td>
-                  <td className="px-4 py-3 text-slate-700">{formatPrice(food.price)}</td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {food.stockQuantity} {food.unit || "portion"}
-                    {Number(food.stockQuantity || 0) <= Number(food.lowStockThreshold || 0) ? (
-                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
-                        low
-                      </span>
-                    ) : null}
-                    {food.isAvailable === false ? (
-                      <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800">
-                        hidden
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">{food.isBestSeller ? "Yes" : "No"}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="inline-flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(food)}
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(food._id)}
-                        className="rounded-md border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-
-      <FoodFormModal
-        open={modalOpen}
-        food={editingFood}
-        onClose={() => {
-          setModalOpen(false);
-          setEditingFood(null);
-        }}
-        onSubmit={handleSave}
-      />
-    </section>
-  );
+  return <div className="menu-page"><div className="menu-page-heading"><div><div className="orders-breadcrumb"><span>Workspace</span><b>/</b><strong>Menu</strong></div><h1>Menu</h1><p>Shape the menu your guests come back for.</p></div><button className="primary-btn" type="button" onClick={openCreate}><FoodIcon type="plus" /> Add menu item</button></div><div className="menu-toolbar"><label className="menu-search"><FoodIcon type="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search menu items..." aria-label="Search menu items" /></label><span className="menu-count">{visibleFoods.length} items</span><button type="button" className="menu-sort">Sort: <b>Most popular</b>⌄</button></div><div className="menu-layout"><aside className="menu-filters"><div className="filter-heading"><h2>Filters</h2><button type="button" onClick={() => { setActiveCategory("All"); setPrice("All prices"); setRating("All ratings"); setAvailability("All items"); setPromotion("All promotions"); }}>Clear all</button></div><div className="filter-group"><h3>Categories</h3>{categories.map((category) => <button key={category} className={activeCategory === category ? "active" : ""} type="button" onClick={() => setActiveCategory(category)}><span className="filter-category-dot" />{category}{category === "All" ? <em>24</em> : null}</button>)}</div><div className="filter-group"><h3>Price range</h3>{["All prices", "Under $10", "$10–$20", "$20–$30", "Above $30"].map((option) => <label key={option}><input type="radio" checked={price === option} onChange={() => setPrice(option)} />{option}</label>)}</div><div className="filter-group"><h3>Rating</h3>{["All ratings", "5 stars", "4+ stars", "3+ stars"].map((option) => <label key={option}><input type="radio" checked={rating === option} onChange={() => setRating(option)} />{option === "All ratings" ? option : `★ ${option}`}</label>)}</div><div className="filter-group"><h3>Availability</h3>{["All items", "Available", "Sold Out"].map((option) => <label key={option}><input type="radio" checked={availability === option} onChange={() => setAvailability(option)} />{option}</label>)}</div><div className="filter-group"><h3>Promotions</h3>{["All promotions", "Buy 1 Get 1", "Seasonal", "Discount", "Member Offer"].map((option) => <label key={option}><input type="radio" checked={promotion === option} onChange={() => setPromotion(option)} />{option}</label>)}</div></aside><main className="menu-results"><div className="menu-results-head"><div><h2>All menu items</h2><p>Manage availability, pricing, and promotions.</p></div><div className="menu-view-toggle"><button className="active" type="button">▦</button><button type="button">☷</button></div></div><div className="food-grid">{visibleFoods.map((food) => <article className={`food-admin-card ${food.isAvailable ? "" : "sold-out"}`} key={food._id}><div className="food-image-wrap"><img src={food.image} alt="" /><span className="food-category-badge">{food.category}</span>{food.promotion ? <span className="food-promotion">{food.promotion}</span> : null}<button className="food-more" type="button" aria-label={`Actions for ${food.name}`} onClick={() => setOpenMenu(openMenu === food._id ? null : food._id)}><FoodIcon type="more" /></button>{openMenu === food._id ? <div className="food-action-menu"><button type="button" onClick={() => openEdit(food)}>Edit item</button><button type="button" onClick={() => openEdit({ ...food, _id: `local-copy-${Date.now()}`, name: `${food.name} Copy` })}>Duplicate</button><button type="button" onClick={() => toggleAvailability(food)}>{food.isAvailable ? "Mark unavailable" : "Mark available"}</button><button type="button" onClick={() => deleteItem(food)}>Delete</button></div> : null}</div><div className="food-card-content"><div className="food-card-title"><h3>{food.name}</h3><span className={food.isAvailable ? "available-dot" : "sold-dot"} /></div><p>{food.description}</p><div className="food-rating"><span>★ {food.averageRating.toFixed(1)}</span><small>({food.totalReviews} reviews)</small></div><div className="food-card-foot"><b>${Number(food.price).toFixed(2)}</b><span className={food.isAvailable ? "availability available" : "availability unavailable"}>{food.isAvailable ? "Available" : "Sold out"}</span></div></div></article>)}</div>{!visibleFoods.length ? <div className="menu-empty">No menu items match these filters.</div> : null}</main></div>{modalOpen ? <div className="menu-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}><form className="menu-modal" onSubmit={saveItem}><div className="modal-heading"><div><h2>{editing ? "Edit menu item" : "Add menu item"}</h2><p>Add the details your front and back of house need.</p></div><button type="button" onClick={() => setModalOpen(false)} aria-label="Close modal"><FoodIcon type="close" /></button></div><label className="image-upload-field">Food image<input value={form.image} onChange={(event) => setForm({ ...form, image: event.target.value })} placeholder="Paste a public image URL" /><span><FoodIcon type="image" /> Use a food image URL to preview this item.</span></label><label>Item name<input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Truffle Mushroom Pasta" /></label><label>Description<textarea rows="2" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Describe the dish..." /></label><div className="modal-two-col"><label>Category<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{categories.filter((category) => category !== "All").map((category) => <option key={category}>{category}</option>)}</select></label><label>Price<input required type="number" min="0" step=".01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} placeholder="$0.00" /></label></div><div className="modal-two-col"><label>Preparation time<input value={form.preparation} onChange={(event) => setForm({ ...form, preparation: event.target.value })} /></label><label>Tax<input value={form.tax} onChange={(event) => setForm({ ...form, tax: event.target.value })} /></label></div><label>Ingredients<input value={form.ingredients} onChange={(event) => setForm({ ...form, ingredients: event.target.value })} placeholder="Mushrooms, pasta, cream..." /></label><div className="modal-two-col"><label>Dietary information<input value={form.dietary} onChange={(event) => setForm({ ...form, dietary: event.target.value })} placeholder="Vegetarian, contains dairy" /></label><label>Promotion<select value={form.promotion} onChange={(event) => setForm({ ...form, promotion: event.target.value })}><option>None</option><option>Buy 1 Get 1</option><option>Seasonal</option><option>Discount</option><option>Member Offer</option></select></label></div><label className="availability-toggle"><input type="checkbox" checked={form.availability} onChange={(event) => setForm({ ...form, availability: event.target.checked })} /> Available in menu</label><div className="modal-actions"><button className="outline-btn" type="button" onClick={() => setModalOpen(false)}>Cancel</button><button className="primary-btn" type="submit">Save item</button></div></form></div> : null}</div>;
 }
