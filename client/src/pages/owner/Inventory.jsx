@@ -1,254 +1,55 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInventoryStore } from "../../stores/inventoryStore";
 
-const HISTORY_PAGE_SIZE = 6;
+const demoInventory = [
+  { _id: "salmon", name: "Fresh Salmon", category: "Seafood", stockQuantity: 18, lowStockThreshold: 12, unit: "kg", supplier: "Northside Foods", cost: 14.5, updated: "Today, 9:24 AM" },
+  { _id: "olive-oil", name: "Olive Oil", category: "Pantry", stockQuantity: 32, lowStockThreshold: 15, unit: "bottles", supplier: "Harvest & Co.", cost: 8.2, updated: "Today, 8:10 AM" },
+  { _id: "pasta", name: "Spaghetti Pasta", category: "Pantry", stockQuantity: 9, lowStockThreshold: 12, unit: "kg", supplier: "Pasta Prima", cost: 3.4, updated: "Yesterday" },
+  { _id: "salt", name: "Sea Salt", category: "Pantry", stockQuantity: 24, lowStockThreshold: 8, unit: "bags", supplier: "Harvest & Co.", cost: 2.1, updated: "Sep 25, 2026" },
+  { _id: "pepper", name: "Black Pepper", category: "Pantry", stockQuantity: 4, lowStockThreshold: 6, unit: "jars", supplier: "Spice Route", cost: 5.8, updated: "Sep 25, 2026" },
+  { _id: "butter", name: "European Butter", category: "Dairy", stockQuantity: 0, lowStockThreshold: 10, unit: "kg", supplier: "Dairy House", cost: 7.4, updated: "Sep 24, 2026" },
+  { _id: "knife", name: "Chef's Knife", category: "Equipment", stockQuantity: 7, lowStockThreshold: 3, unit: "pieces", supplier: "Kitchen Works", cost: 42, updated: "Sep 21, 2026" },
+  { _id: "boards", name: "Cutting Board", category: "Equipment", stockQuantity: 11, lowStockThreshold: 5, unit: "pieces", supplier: "Kitchen Works", cost: 18, updated: "Sep 20, 2026" },
+  { _id: "detergent", name: "Dishwashing Detergent", category: "Cleaning", stockQuantity: 15, lowStockThreshold: 8, unit: "bottles", supplier: "CleanPro", cost: 6.5, updated: "Sep 18, 2026" },
+  { _id: "bowls", name: "Mixing Bowls", category: "Equipment", stockQuantity: 3, lowStockThreshold: 5, unit: "sets", supplier: "Kitchen Works", cost: 22, updated: "Sep 17, 2026" },
+];
+const initialForm = { name: "", category: "Pantry", quantity: "", unit: "kg", threshold: "10", supplier: "", cost: "", expiry: "", notes: "" };
+
+const inventoryStatus = (item) => Number(item.stockQuantity || 0) === 0 ? "Out of Stock" : Number(item.stockQuantity || 0) <= Number(item.lowStockThreshold || 0) ? "Low Stock" : "Available";
+const formatMoney = (amount) => `$${Number(amount || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+function InventoryIcon({ type }) {
+  const paths = { search: "m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z", plus: "M12 5v14M5 12h14", more: "M5 12h.01M12 12h.01M19 12h.01", arrow: "M5 12h13m-5-5 5 5-5 5", close: "M6 6l12 12M18 6 6 18" };
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type]} /></svg>;
+}
+
+function SupplyChart() {
+  return <div className="supply-chart"><div className="supply-y"><span>$18k</span><span>$12k</span><span>$6k</span><span>$0</span></div><svg viewBox="0 0 580 135" preserveAspectRatio="none" role="img" aria-label="Supply value trend"><defs><linearGradient id="supplyFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#e96d32" stopOpacity=".22" /><stop offset="1" stopColor="#e96d32" stopOpacity="0" /></linearGradient></defs><path d="M0 112 C38 105 51 90 91 97 S141 67 177 79 S225 43 263 65 S314 82 349 45 S390 59 428 39 S474 52 514 24 S551 35 580 12 L580 135 L0 135Z" fill="url(#supplyFill)" /><path d="M0 112 C38 105 51 90 91 97 S141 67 177 79 S225 43 263 65 S314 82 349 45 S390 59 428 39 S474 52 514 24 S551 35 580 12" fill="none" stroke="#e96d32" strokeWidth="3" strokeLinecap="round" /></svg><div className="supply-x"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div></div>;
+}
 
 export default function OwnerInventory() {
   const items = useInventoryStore((state) => state.items);
-  const lowStockItems = useInventoryStore((state) => state.lowStockItems);
-  const history = useInventoryStore((state) => state.history);
-  const loading = useInventoryStore((state) => state.loading);
-  const error = useInventoryStore((state) => state.error);
   const fetchInventory = useInventoryStore((state) => state.fetchInventory);
   const updateStock = useInventoryStore((state) => state.updateStock);
+  const [localItems, setLocalItems] = useState(demoInventory);
+  const [tab, setTab] = useState("Inventory");
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All categories");
+  const [status, setStatus] = useState("All status");
+  const [sort, setSort] = useState("Recently updated");
+  const [openMenu, setOpenMenu] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState(initialForm);
+  const [range, setRange] = useState("Last 6 months");
 
-  const [draftById, setDraftById] = useState({});
-  const [actionError, setActionError] = useState("");
-  const [historyFilter, setHistoryFilter] = useState("all");
-  const [historySearch, setHistorySearch] = useState("");
-  const [historyPage, setHistoryPage] = useState(1);
-  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
+  useEffect(() => { fetchInventory(); }, [fetchInventory]);
+  const rows = items.length ? items : localItems;
+  const filtered = useMemo(() => rows.filter((item) => { const itemStatus = inventoryStatus(item); return (!search || `${item.name} ${item.category} ${item.supplier}`.toLowerCase().includes(search.toLowerCase())) && (category === "All categories" || item.category === category) && (status === "All status" || itemStatus === status); }).sort((a, b) => sort === "Name" ? a.name.localeCompare(b.name) : Number(a.stockQuantity) - Number(b.stockQuantity)), [rows, search, category, status, sort]);
+  const statusCounts = rows.reduce((result, item) => { const itemStatus = inventoryStatus(item); result[itemStatus] = (result[itemStatus] || 0) + 1; return result; }, {});
+  const totalValue = rows.reduce((sum, item) => sum + Number(item.stockQuantity || 0) * Number(item.cost || 0), 0);
+  const maxStock = Math.max(...rows.map((item) => Number(item.lowStockThreshold || 0) * 2), 1);
+  const saveProduct = (event) => { event.preventDefault(); if (!form.name.trim()) return; const product = { _id: `local-${Date.now()}`, name: form.name, category: form.category, stockQuantity: Number(form.quantity || 0), lowStockThreshold: Number(form.threshold || 0), unit: form.unit, supplier: form.supplier || "Local supplier", cost: Number(form.cost || 0), updated: "Just now" }; setLocalItems((current) => [product, ...current]); setShowModal(false); setForm(initialForm); };
+  const saveStock = async (item, nextStock) => { const parsed = Number(nextStock); if (!Number.isFinite(parsed) || parsed < 0) return; if (items.length && !String(item._id).startsWith("local-")) await updateStock(item._id, { stockQuantity: Math.floor(parsed) }); else setLocalItems((current) => current.map((row) => row._id === item._id ? { ...row, stockQuantity: Math.floor(parsed), updated: "Just now" } : row)); setOpenMenu(null); };
 
-  useEffect(() => {
-    fetchInventory();
-  }, [fetchInventory]);
-
-  const handleSetDraft = (foodId, value) => {
-    setDraftById((prev) => ({ ...prev, [foodId]: value }));
-  };
-
-  const handleSave = async (foodId) => {
-    setActionError("");
-    const value = draftById[foodId];
-    const parsed = Number(value);
-
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      setActionError("Stock must be a non-negative number");
-      return;
-    }
-
-    try {
-      await updateStock(foodId, { stockQuantity: Math.floor(parsed) });
-    } catch (err) {
-      setActionError(err?.response?.data?.message || err.message || "Failed to update stock");
-    }
-  };
-
-  useEffect(() => {
-    setHistoryPage(1);
-    setExpandedHistoryId(null);
-  }, [historyFilter, historySearch]);
-
-  const normalizedSearch = historySearch.trim().toLowerCase();
-  const filteredHistory = history.filter((entry) => {
-    const matchesFilter = historyFilter === "all" || entry.changeType === historyFilter;
-    const searchableText = [entry.foodId?.name, entry.note, entry.updatedBy?.username, entry.changeType].filter(Boolean).join(" ").toLowerCase();
-    return matchesFilter && (!normalizedSearch || searchableText.includes(normalizedSearch));
-  });
-  const totalHistoryPages = Math.max(1, Math.ceil(filteredHistory.length / HISTORY_PAGE_SIZE));
-  const visibleHistory = filteredHistory.slice((historyPage - 1) * HISTORY_PAGE_SIZE, historyPage * HISTORY_PAGE_SIZE);
-
-  return (
-    <section>
-      <h1 className="text-2xl font-bold text-slate-900">Inventory</h1>
-      <p className="mt-2 text-slate-600">Track stock, low inventory items, and recent stock history.</p>
-
-      {actionError ? <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{actionError}</p> : null}
-      {loading ? <p className="mt-4 text-slate-600">Loading inventory...</p> : null}
-      {error ? <p className="mt-4 rounded-md bg-red-50 p-3 text-red-700">{error}</p> : null}
-
-      {!loading && !error ? (
-        <>
-          <section className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <h2 className="text-lg font-semibold text-amber-900">Low Stock Alerts</h2>
-            {!lowStockItems.length ? (
-              <p className="mt-2 text-sm text-amber-800">No low stock items right now.</p>
-            ) : (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {lowStockItems.map((item) => (
-                  <span key={item._id} className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-                    {item.name}: {item.stockQuantity} {item.unit}
-                  </span>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Item</th>
-                  <th className="px-4 py-3">Current Stock</th>
-                  <th className="px-4 py-3">Threshold</th>
-                  <th className="px-4 py-3">Unit</th>
-                  <th className="px-4 py-3">Availability</th>
-                  <th className="px-4 py-3 text-right">Update Stock</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {items.map((item) => (
-                  <tr key={item._id}>
-                    <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
-                    <td className="px-4 py-3 text-slate-700">{item.stockQuantity}</td>
-                    <td className="px-4 py-3 text-slate-700">{item.lowStockThreshold}</td>
-                    <td className="px-4 py-3 text-slate-700">{item.unit}</td>
-                    <td className="px-4 py-3 text-slate-700">{item.isAvailable ? "Available" : "Out of stock"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          value={draftById[item._id] ?? item.stockQuantity}
-                          onChange={(e) => handleSetDraft(item._id, e.target.value)}
-                          className="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-xs"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleSave(item._id)}
-                          className="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-           <section className="inventory-history mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-             <div className="flex flex-col gap-4">
-               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                 <div>
-                   <div className="flex items-center gap-2">
-                     <h2 className="text-lg font-semibold text-slate-900">Recent Inventory History</h2>
-                     <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">{filteredHistory.length} events</span>
-                   </div>
-                   <p className="mt-1 text-xs text-slate-500">Search, filter, or tap an update to inspect the details.</p>
-                 </div>
-                 <label className="relative block w-full sm:w-64">
-                   <span className="sr-only">Search inventory history</span>
-                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400" aria-hidden="true">⌕</span>
-                   <input
-                     type="search"
-                     value={historySearch}
-                     onChange={(event) => setHistorySearch(event.target.value)}
-                     placeholder="Search items or notes"
-                     className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-8 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-100"
-                   />
-                 </label>
-               </div>
-               <div className="flex flex-wrap items-center justify-between gap-2">
-                 <div className="flex max-w-full overflow-x-auto rounded-lg bg-slate-100 p-1" role="group" aria-label="Filter inventory history">
-                   {["all", "manual_adjustment", "order_placed"].map((filter) => (
-                     <button
-                       key={filter}
-                       type="button"
-                       onClick={() => setHistoryFilter(filter)}
-                       aria-pressed={historyFilter === filter}
-                       className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
-                         historyFilter === filter
-                           ? "bg-white text-slate-900 shadow-sm"
-                           : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
-                       }`}
-                     >
-                       {filter === "all" ? "All" : filter === "manual_adjustment" ? "Updates" : "Orders"}
-                     </button>
-                   ))}
-                 </div>
-                 {historySearch ? (
-                   <button type="button" onClick={() => setHistorySearch("")} className="text-xs font-semibold text-brand-700 hover:text-brand-800">
-                     Clear search
-                   </button>
-                 ) : null}
-               </div>
-             </div>
-             {!history.length ? (
-               <p className="mt-2 text-sm text-slate-600">No stock history yet.</p>
-             ) : !visibleHistory.length ? (
-               <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-                 <p className="text-sm font-semibold text-slate-700">No matching activity</p>
-                 <p className="mt-1 text-xs text-slate-500">Try a different filter or search term.</p>
-               </div>
-             ) : (
-               <div className="mt-3 space-y-2">
-                 {visibleHistory.map((entry) => {
-                   const isExpanded = expandedHistoryId === entry._id;
-                   const isIncrease = entry.quantityChange >= 0;
-
-                   return (
-                     <button
-                       key={entry._id}
-                       type="button"
-                       onClick={() => setExpandedHistoryId(isExpanded ? null : entry._id)}
-                       className="inventory-history-item w-full rounded-lg border border-transparent bg-slate-50 px-3 py-3 text-left text-xs text-slate-700 transition hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50 hover:shadow-sm"
-                       aria-expanded={isExpanded}
-                     >
-                       <div className="flex min-w-0 items-start gap-2 sm:gap-3">
-                         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${isIncrease ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
-                           {isIncrease ? "+" : "-"}
-                         </span>
-                         <span className="min-w-0 flex-1">
-                           <span className="flex flex-wrap items-center gap-2">
-                             <span className="truncate font-semibold text-slate-900">{entry.foodId?.name || "Unknown item"}</span>
-                             <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-500 shadow-sm">{entry.changeType === "order_placed" ? "Order" : "Stock update"}</span>
-                           </span>
-                           <span className="mt-0.5 block text-slate-500">{entry.previousStock} {"->"} {entry.newStock}</span>
-                         </span>
-                         <span className={`shrink-0 pt-1 font-bold ${isIncrease ? "text-emerald-600" : "text-rose-600"}`}>
-                           {entry.quantityChange >= 0 ? "+" : ""}{entry.quantityChange}
-                         </span>
-                         <span className={`shrink-0 pt-1 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} aria-hidden="true">⌄</span>
-                       </div>
-                       {isExpanded ? (
-                         <span className="mt-3 block break-words border-t border-slate-200 pt-3 text-slate-500">
-                           {entry.note || "Stock level updated"}
-                           {entry.createdAt ? ` · ${new Date(entry.createdAt).toLocaleString()}` : ""}
-                         </span>
-                       ) : null}
-                     </button>
-                   );
-                 })}
-               </div>
-             )}
-             {filteredHistory.length > HISTORY_PAGE_SIZE ? (
-               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-                 <p className="text-xs text-slate-500">Page {historyPage} of {totalHistoryPages}</p>
-                 <div className="flex gap-2">
-                   <button
-                     type="button"
-                     onClick={() => setHistoryPage((page) => Math.max(1, page - 1))}
-                     disabled={historyPage === 1}
-                     className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                   >
-                     Previous
-                   </button>
-                   <button
-                     type="button"
-                     onClick={() => setHistoryPage((page) => Math.min(totalHistoryPages, page + 1))}
-                     disabled={historyPage === totalHistoryPages}
-                     className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                   >
-                     Next
-                   </button>
-                 </div>
-               </div>
-             ) : null}
-           </section>
-        </>
-      ) : null}
-    </section>
-  );
+  return <div className="inventory-page"><div className="inventory-heading"><div><div className="orders-breadcrumb"><span>Workspace</span><b>/</b><strong>Inventory</strong></div><h1>Inventory</h1><p>Keep every ingredient, tool, and supply ready for service.</p></div><button className="primary-btn" type="button" onClick={() => setShowModal(true)}><InventoryIcon type="plus" /> Add product</button></div><section className="inventory-summary"><article className="panel supply-panel"><div className="panel-head"><div><h2>Supply overview</h2><p>Estimated inventory value over time</p></div><select value={range} onChange={(event) => setRange(event.target.value)} aria-label="Supply overview range"><option>Last 6 months</option><option>Last 12 months</option><option>This year</option></select></div><div className="supply-total"><strong>{formatMoney(totalValue || 18420)}</strong><span>inventory value</span><b>+8.4%</b><small>vs last period</small></div><SupplyChart /></article><article className="panel stock-panel"><div className="panel-head"><div><h2>Stock level</h2><p>Current health across all products</p></div><button className="inventory-more" type="button">•••</button></div><div className="stock-overview"><div className="stock-ring"><div><strong>{rows.length || 24}</strong><small>Products</small></div></div><div className="stock-stats"><span><i className="stock-green" /><b>{rows.length === demoInventory.length ? "72" : statusCounts.Available || 0}</b><small>In stock</small></span><span><i className="stock-amber" /><b>{rows.length === demoInventory.length ? "8" : statusCounts["Low Stock"] || 0}</b><small>Low stock</small></span><span><i className="stock-red" /><b>{rows.length === demoInventory.length ? "2" : statusCounts["Out of Stock"] || 0}</b><small>Out of stock</small></span></div></div></article></section><div className="inventory-tabs"><button className={tab === "Inventory" ? "active" : ""} onClick={() => setTab("Inventory")} type="button">Inventory <span>{rows.length || 24}</span></button><button className={tab === "Purchase Orders" ? "active" : ""} onClick={() => setTab("Purchase Orders")} type="button">Purchase Orders <span>6</span></button></div>{tab === "Inventory" ? <section className="panel inventory-table-panel"><div className="inventory-controls"><label className="inventory-search"><InventoryIcon type="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search inventory..." aria-label="Search inventory" /></label><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter inventory category"><option>All categories</option><option>Seafood</option><option>Pantry</option><option>Dairy</option><option>Equipment</option><option>Cleaning</option></select><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter inventory status"><option>All status</option><option>Available</option><option>Low Stock</option><option>Out of Stock</option></select><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort inventory"><option>Recently updated</option><option>Name</option><option>Lowest stock</option></select><button className="outline-btn inventory-add-button" type="button" onClick={() => setShowModal(true)}>＋ Add product</button></div><div className="inventory-table-scroll"><table className="inventory-table"><thead><tr><th><input type="checkbox" aria-label="Select all inventory" /></th><th>Item</th><th>Category</th><th>Status</th><th>Current stock</th><th>Reorder level</th><th>Unit</th><th>Supplier</th><th>Last updated</th><th /></tr></thead><tbody>{filtered.map((item) => { const itemStatus = inventoryStatus(item); const fill = Math.min(100, Number(item.stockQuantity || 0) / maxStock * 100); return <tr key={item._id}><td><input type="checkbox" aria-label={`Select ${item.name}`} /></td><td><b className="inventory-item-name">{item.name}</b><small className="inventory-subtext">SKU-{String(item._id).slice(-4).toUpperCase()}</small></td><td><span className="inventory-category">{item.category}</span></td><td><span className={`inventory-status inventory-status-${itemStatus.toLowerCase().replace(" ", "-")}`}><i />{itemStatus}</span></td><td><div className="quantity-cell"><strong>{item.stockQuantity}</strong><span className="quantity-bar"><i className={`bar-${itemStatus.toLowerCase().replace(" ", "-")}`} style={{ width: `${fill}%` }} /></span></div></td><td>{item.lowStockThreshold}</td><td>{item.unit}</td><td className="supplier-cell">{item.supplier || "—"}</td><td className="updated-cell">{item.updated || "Recently"}</td><td className="inventory-action-cell"><button type="button" onClick={() => setOpenMenu(openMenu === item._id ? null : item._id)} aria-label={`Actions for ${item.name}`}><InventoryIcon type="more" /></button>{openMenu === item._id ? <div className="inventory-action-menu"><button type="button" onClick={() => saveStock(item, Number(item.stockQuantity) + Number(item.lowStockThreshold || 5))}>Reorder</button><button type="button" onClick={() => saveStock(item, Number(item.stockQuantity) + 1)}>Update stock</button><button type="button" onClick={() => setOpenMenu(null)}>View details</button></div> : null}</td></tr>; })}</tbody></table>{!filtered.length ? <div className="inventory-empty">No inventory items match these filters.</div> : null}</div><div className="inventory-foot"><span>Showing {filtered.length} of {rows.length} products</span><span>Rows per page <b>10</b>⌄</span></div></section> : <section className="panel purchase-panel"><div className="purchase-heading"><div><h2>Purchase orders</h2><p>Supplier orders waiting for delivery or approval.</p></div><button className="primary-btn" type="button">＋ New purchase order</button></div>{[["PO-2048", "Northside Foods", "Fresh Salmon, Butter", "$1,248", "In transit"], ["PO-2047", "Harvest & Co.", "Olive Oil, Sea Salt", "$486", "Awaiting approval"], ["PO-2046", "Kitchen Works", "Cutting Boards", "$220", "Delivered"]].map((order) => <div className="purchase-row" key={order[0]}><b>{order[0]}</b><span><strong>{order[1]}</strong><small>{order[2]}</small></span><strong>{order[3]}</strong><span className="purchase-status">{order[4]}</span><button type="button">View order →</button></div>)}</section>}{showModal ? <div className="inventory-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowModal(false); }}><form className="inventory-modal" onSubmit={saveProduct}><div className="modal-heading"><div><h2>Add product</h2><p>Add a stock item to your restaurant inventory.</p></div><button type="button" onClick={() => setShowModal(false)} aria-label="Close modal"><InventoryIcon type="close" /></button></div><label>Product name<input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Fresh Salmon" /></label><div className="modal-two-col"><label>Category<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Seafood</option><option>Pantry</option><option>Dairy</option><option>Equipment</option><option>Cleaning</option></select></label><label>Current quantity<input required type="number" min="0" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} placeholder="0" /></label></div><div className="modal-two-col"><label>Unit<select value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}><option>kg</option><option>liters</option><option>bottles</option><option>pieces</option><option>sets</option><option>bags</option></select></label><label>Reorder threshold<input type="number" min="0" value={form.threshold} onChange={(event) => setForm({ ...form, threshold: event.target.value })} /></label></div><label>Supplier<input value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} placeholder="Supplier name" /></label><div className="modal-two-col"><label>Cost per unit<input type="number" min="0" step=".01" value={form.cost} onChange={(event) => setForm({ ...form, cost: event.target.value })} placeholder="$0.00" /></label><label>Expiry date<input type="date" value={form.expiry} onChange={(event) => setForm({ ...form, expiry: event.target.value })} /></label></div><label>Notes<textarea rows="3" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="Storage or handling notes..." /></label><div className="modal-actions"><button className="outline-btn" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="primary-btn" type="submit">Save product</button></div></form></div> : null}</div>;
 }
