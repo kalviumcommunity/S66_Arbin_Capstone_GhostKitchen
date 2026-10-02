@@ -23,6 +23,7 @@ import OwnerOrders from "./pages/owner/Orders";
 import OwnerMessages from "./pages/owner/Messages";
 import OwnerCalendar from "./pages/owner/Calendar";
 import OwnerInventory from "./pages/owner/Inventory";
+import OwnerPurchaseOrders from "./pages/owner/PurchaseOrders";
 import OwnerReviews from "./pages/owner/Reviews";
 import NotificationToast from "./components/NotificationToast";
 import RealtimeBridge from "./components/RealtimeBridge";
@@ -114,6 +115,7 @@ export default function App() {
             <Route path="messages" element={<OwnerMessages />} />
             <Route path="calendar" element={<OwnerCalendar />} />
             <Route path="inventory" element={<OwnerInventory />} />
+            <Route path="purchase-orders" element={<OwnerPurchaseOrders />} />
             <Route path="reviews" element={<OwnerReviews />} />
           </Route>
           <Route path="*" element={<NotFound />} />
