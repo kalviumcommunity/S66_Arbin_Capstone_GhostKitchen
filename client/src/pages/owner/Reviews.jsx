@@ -1,118 +1,58 @@
-import { useEffect, useState } from "react";
-import { getFoodReviews, respondToReview } from "../../api/reviews";
-import { getFoods } from "../../api/foods";
-import ReviewList from "../../components/ReviewList";
+import { useMemo, useState } from "react";
+
+const demoReviews = [
+  { id: "review-1", image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=120&q=80", item: "Truffle Mushroom Pasta", category: "Main course", customer: "Sofia Martinez", initials: "SM", rating: 5, date: "Sep 29, 2026", text: "The pasta was incredible. Rich, earthy, and perfectly cooked. We will definitely be back for this one.", helpful: 18, response: "Needs reply" },
+  { id: "review-2", image: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=120&q=80", item: "Garden Harvest Bowl", category: "Healthy choice", customer: "Daniel Kim", initials: "DK", rating: 4, date: "Sep 28, 2026", text: "Fresh ingredients and a lovely dressing. The portion was a little smaller than expected, but the flavors were great.", helpful: 9, response: "Replied" },
+  { id: "review-3", image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80", item: "Spicy Pepperoni Pizza", category: "Pizza", customer: "James Wilson", initials: "JW", rating: 2, date: "Sep 26, 2026", text: "The pizza arrived lukewarm and the crust was much too soft. The team was friendly, but this missed the mark.", helpful: 5, response: "Needs reply" },
+  { id: "review-4", image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=120&q=80", item: "Roasted Salmon", category: "Seafood", customer: "Ava Thompson", initials: "AT", rating: 5, date: "Sep 24, 2026", text: "Beautifully plated and full of flavor. The service was attentive without being intrusive. A lovely evening.", helpful: 24, response: "Resolved" },
+  { id: "review-5", image: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=120&q=80", item: "Olive Oil Cake", category: "Dessert", customer: "Noah Patel", initials: "NP", rating: 3, date: "Sep 22, 2026", text: "The cake was enjoyable, though I hoped for a little more citrus flavor. The coffee pairing was excellent.", helpful: 3, response: "Replied" },
+];
+const categoryScores = [["Food quality", 4.8], ["Service", 4.7], ["Ambience", 4.6], ["Value for money", 4.2], ["Cleanliness", 4.9]];
+const trendData = { "This Month": [42, 48, 51, 57, 54, 63], "Last 6 Months": [38, 46, 44, 55, 57, 63], "This Year": [31, 39, 43, 47, 51, 63] };
+
+function ReviewIcon({ type }) {
+  const paths = { search: "m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z", close: "M6 6l12 12M18 6 6 18", arrow: "M5 12h13m-5-5 5 5-5 5" };
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type]} /></svg>;
+}
+
+function Stars({ rating, large = false }) {
+  return <span className={`review-stars ${large ? "large" : ""}`} aria-label={`${rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <b key={star} className={star <= rating ? "filled" : ""}>★</b>)}</span>;
+}
+
+function SentimentChart({ range }) {
+  const values = trendData[range];
+  const points = values.map((value, index) => `${index * 20}% ${118 - value * 1.3}`).join(" L ");
+  const positive = `${points} L 100% 150 L 0 150 Z`;
+  return <div className="sentiment-chart"><div className="sentiment-y"><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span></div><svg viewBox="0 0 500 150" preserveAspectRatio="none" role="img" aria-label="Positive and negative review trend"><defs><linearGradient id="reviewFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#e96d32" stopOpacity=".2" /><stop offset="1" stopColor="#e96d32" stopOpacity="0" /></linearGradient></defs><path d={`M${positive}`} fill="url(#reviewFill)" /><path d={`M${points}`} fill="none" stroke="#e96d32" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M0 131 C60 136 110 128 165 134 S280 122 335 129 S440 121 500 125" fill="none" stroke="#c8b9ad" strokeWidth="2" strokeDasharray="5 5" /></svg><div className="sentiment-x"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div></div>;
+}
 
 export default function OwnerReviews() {
-  const [foods, setFoods] = useState([]);
-  const [selectedFoodId, setSelectedFoodId] = useState("");
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [responseDraft, setResponseDraft] = useState({});
+  const [reviews, setReviews] = useState(demoReviews);
+  const [search, setSearch] = useState("");
+  const [range, setRange] = useState("Last 6 Months");
+  const [rating, setRating] = useState("All ratings");
+  const [category, setCategory] = useState("All categories");
+  const [item, setItem] = useState("All menu items");
+  const [dateRange, setDateRange] = useState("Any date");
+  const [replyReview, setReplyReview] = useState(null);
+  const [reply, setReply] = useState("");
 
-  useEffect(() => {
-    const loadFoods = async () => {
-      try {
-        const data = await getFoods();
-        setFoods(data);
-      } catch {
-        setError("Failed to load foods");
-      }
-    };
-    loadFoods();
-  }, []);
+  const filteredReviews = useMemo(() => reviews.filter((review) => {
+    const matchesSearch = !search || `${review.item} ${review.customer} ${review.text}`.toLowerCase().includes(search.toLowerCase());
+    const matchesRating = rating === "All ratings" || review.rating === Number(rating[0]);
+    const matchesCategory = category === "All categories" || review.category === category;
+    const matchesItem = item === "All menu items" || review.item === item;
+    return matchesSearch && matchesRating && matchesCategory && matchesItem;
+  }), [reviews, search, rating, category, item]);
 
-  useEffect(() => {
-    if (!selectedFoodId) {
-      setReviews([]);
-      return;
-    }
+  const markResolved = (id) => setReviews((current) => current.map((review) => review.id === id ? { ...review, response: "Resolved" } : review));
+  const sendReply = (event) => { event.preventDefault(); if (!reply.trim() || !replyReview) return; setReviews((current) => current.map((review) => review.id === replyReview.id ? { ...review, response: "Replied" } : review)); setReply(""); setReplyReview(null); };
 
-    const loadReviews = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await getFoodReviews(selectedFoodId);
-        setReviews(data);
-      } catch (err) {
-        setError(err?.response?.data?.message || "Failed to load reviews");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadReviews();
-  }, [selectedFoodId]);
-
-  const handleRespond = async (reviewId) => {
-    const message = (responseDraft[reviewId] || "").trim();
-    if (!message) return;
-
-    try {
-      const updated = await respondToReview(reviewId, message);
-      setReviews((prev) => prev.map((review) => (review._id === reviewId ? updated : review)));
-      setResponseDraft((prev) => ({ ...prev, [reviewId]: "" }));
-    } catch (err) {
-      setError(err?.response?.data?.message || "Failed to submit response");
-    }
-  };
-
-  return (
-    <section>
-      <h1 className="text-2xl font-bold text-slate-900">Customer Reviews</h1>
-      <p className="mt-2 text-slate-600">Review feedback and respond to customer comments.</p>
-
-      <div className="mt-4 max-w-md">
-        <select
-          value={selectedFoodId}
-          onChange={(e) => setSelectedFoodId(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        >
-          <option value="">Select food item</option>
-          {foods.map((food) => (
-            <option key={food._id} value={food._id}>
-              {food.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {error ? <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
-      {loading ? <p className="mt-4 text-slate-600">Loading reviews...</p> : null}
-
-      {!loading && selectedFoodId ? (
-        <div className="mt-6 space-y-3">
-          <ReviewList reviews={reviews} />
-
-          {reviews.map((review) => (
-            <div key={`response-${review._id}`} className="rounded-md border border-slate-200 bg-white p-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Respond to {review.userId?.username || "customer"}
-              </p>
-              <textarea
-                rows={2}
-                value={responseDraft[review._id] || ""}
-                onChange={(e) =>
-                  setResponseDraft((prev) => ({
-                    ...prev,
-                    [review._id]: e.target.value,
-                  }))
-                }
-                placeholder="Type your response"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
-              <button
-                type="button"
-                onClick={() => handleRespond(review._id)}
-                className="mt-2 rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
-              >
-                Send Response
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </section>
-  );
+  return <div className="reviews-page">
+    <div className="reviews-page-heading"><div><div className="orders-breadcrumb"><span>Dashboard</span><b>/</b><strong>Reviews</strong></div><h1>Reviews</h1><p>Understand guest sentiment and keep every conversation moving.</p></div><div className="reviews-heading-actions"><label className="reviews-header-search"><ReviewIcon type="search" /><input aria-label="Search reviews" placeholder="Search reviews..." value={search} onChange={(event) => setSearch(event.target.value)} /></label><select value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Review date filter"><option>Any date</option><option>This week</option><option>This month</option><option>Last 6 months</option></select></div></div>
+    <section className="review-summary-grid"><article className="review-rating-card"><div className="review-card-heading"><div><h2>Overall rating</h2><p>Your guest experience at a glance</p></div><span className="rating-period">Last 12 months</span></div><div className="rating-main"><div className="rating-number">4.7<span>/5</span></div><div><Stars rating={5} large /><p>Based on <b>248 reviews</b></p></div></div><div className="rating-breakdown"><div><span>5</span><i><b style={{ width: "82%" }} /></i><small>204</small></div><div><span>4</span><i><b style={{ width: "21%" }} /></i><small>32</small></div><div><span>3</span><i><b style={{ width: "8%" }} /></i><small>8</small></div><div><span>2</span><i><b style={{ width: "4%" }} /></i><small>3</small></div><div><span>1</span><i><b style={{ width: "2%" }} /></i><small>1</small></div></div></article><article className="review-categories-card"><div className="review-card-heading"><div><h2>Rating categories</h2><p>What guests notice most</p></div></div><div className="category-score-list">{categoryScores.map(([label, score]) => <div className="category-score" key={label}><span>{label}</span><i><b style={{ width: `${score * 20}%` }} /></i><strong>{score.toFixed(1)}</strong></div>)}</div></article></section>
+    <section className="review-statistics panel"><div className="review-stat-head"><div><h2>Review statistics</h2><p>Positive and negative sentiment over time</p></div><div className="range-toggle">{Object.keys(trendData).map((label) => <button key={label} type="button" className={range === label ? "active" : ""} onClick={() => setRange(label)}>{label}</button>)}</div></div><div className="sentiment-legend"><span><i className="legend-positive" /> Positive reviews <b>92%</b></span><span><i className="legend-negative" /> Negative reviews <b>8%</b></span></div><SentimentChart range={range} /></section>
+    <section className="review-list-panel panel"><div className="review-list-head"><div><h2>Customer feedback</h2><p>{filteredReviews.length} reviews matching your filters</p></div><button className="outline-btn" type="button">Export feedback <ReviewIcon type="arrow" /></button></div><div className="review-filters"><label className="review-filter-search"><ReviewIcon type="search" /><input aria-label="Search item or customer" placeholder="Search item or customer" value={search} onChange={(event) => setSearch(event.target.value)} /></label><select value={rating} onChange={(event) => setRating(event.target.value)} aria-label="Filter rating"><option>All ratings</option><option>5 stars</option><option>4 stars</option><option>3 stars</option><option>2 stars</option><option>1 star</option></select><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter category"><option>All categories</option><option>Main course</option><option>Healthy choice</option><option>Pizza</option><option>Seafood</option><option>Dessert</option></select><select value={item} onChange={(event) => setItem(event.target.value)} aria-label="Filter menu item"><option>All menu items</option>{[...new Set(reviews.map((review) => review.item))].map((menuItem) => <option key={menuItem}>{menuItem}</option>)}</select><select value={dateRange} onChange={(event) => setDateRange(event.target.value)} aria-label="Filter date range"><option>Any date</option><option>This week</option><option>This month</option><option>Last 6 months</option></select></div><div className="review-list">{filteredReviews.map((review) => <article className="feedback-row" key={review.id}><img className="feedback-thumb" src={review.image} alt="" /><div className="feedback-content"><div className="feedback-top"><div><h3>{review.item}</h3><span className="feedback-category">{review.category}</span></div><span className={`response-badge response-${review.response.toLowerCase().replace(" ", "-")}`}>{review.response}</span></div><div className="feedback-meta"><span className="customer-avatar">{review.initials}</span><b>{review.customer}</b><Stars rating={review.rating} /><small>{review.date}</small></div><p>“{review.text}”</p><div className="feedback-foot"><span>♡ {review.helpful} found this helpful</span><div className="feedback-actions"><button type="button" onClick={() => { setReplyReview(review); setReply(""); }}>Reply</button><button type="button" onClick={() => markResolved(review.id)}>{review.response === "Resolved" ? "Resolved" : "Mark as resolved"}</button><button type="button">Report</button><button type="button">View customer</button></div></div></div></article>)}{!filteredReviews.length ? <div className="reviews-empty">No reviews match these filters.</div> : null}</div><div className="reviews-pagination"><span>Showing {filteredReviews.length} of {reviews.length} reviews</span><div><button type="button" disabled>←</button><button type="button" className="current-page">1</button><button type="button">2</button><button type="button">→</button></div></div></section>
+    {replyReview ? <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setReplyReview(null)}><form className="reply-modal" onSubmit={sendReply}><div className="modal-head"><div><h2>Reply to {replyReview.customer}</h2><p>Write a thoughtful response that reflects your restaurant voice.</p></div><button type="button" className="modal-close" aria-label="Close reply modal" onClick={() => setReplyReview(null)}><ReviewIcon type="close" /></button></div><div className="customer-review-quote"><div className="feedback-meta"><span className="customer-avatar">{replyReview.initials}</span><b>{replyReview.customer}</b><Stars rating={replyReview.rating} /><small>{replyReview.date}</small></div><p>“{replyReview.text}”</p><small>{replyReview.item} · {replyReview.category}</small></div><label className="response-label">Restaurant response<textarea rows="5" value={reply} onChange={(event) => setReply(event.target.value)} placeholder="Thank your guest and let them know their feedback matters..." required /></label><div className="modal-actions"><button className="outline-btn" type="button" onClick={() => setReplyReview(null)}>Cancel</button><button className="primary-btn" type="submit">Send response</button></div></form></div> : null}
+  </div>;
 }
