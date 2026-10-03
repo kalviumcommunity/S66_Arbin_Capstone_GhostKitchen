@@ -9,6 +9,7 @@ const demoReviews = [
 ];
 const categoryScores = [["Food quality", 4.8], ["Service", 4.7], ["Ambience", 4.6], ["Value for money", 4.2], ["Cleanliness", 4.9]];
 const trendData = { "This Month": [42, 48, 51, 57, 54, 63], "Last 6 Months": [38, 46, 44, 55, 57, 63], "This Year": [31, 39, 43, 47, 51, 63] };
+const matchesDateRange = (date, range) => { if (range === "Any date") return true; const days = range === "This week" ? 7 : range === "This month" ? 31 : 183; return (new Date("Sep 30, 2026") - new Date(date)) / 86400000 <= days; };
 
 function ReviewIcon({ type }) {
   const paths = { search: "m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z", close: "M6 6l12 12M18 6 6 18", arrow: "M5 12h13m-5-5 5 5-5 5" };
@@ -42,8 +43,8 @@ export default function OwnerReviews() {
     const matchesRating = rating === "All ratings" || review.rating === Number(rating[0]);
     const matchesCategory = category === "All categories" || review.category === category;
     const matchesItem = item === "All menu items" || review.item === item;
-    return matchesSearch && matchesRating && matchesCategory && matchesItem;
-  }), [reviews, search, rating, category, item]);
+    return matchesSearch && matchesRating && matchesCategory && matchesItem && matchesDateRange(review.date, dateRange);
+  }), [reviews, search, rating, category, item, dateRange]);
 
   const markResolved = (id) => setReviews((current) => current.map((review) => review.id === id ? { ...review, response: "Resolved" } : review));
   const sendReply = (event) => { event.preventDefault(); if (!reply.trim() || !replyReview) return; setReviews((current) => current.map((review) => review.id === replyReview.id ? { ...review, response: "Replied" } : review)); setReply(""); setReplyReview(null); };
