@@ -53,7 +53,7 @@ export default function App() {
   return (
     <div className={`min-h-screen overflow-x-hidden ${isOwnerRoute ? "owner-app" : "bg-slate-50"}`}>
       {!isOwnerRoute ? <Navbar /> : null}
-      {!isOwnerRoute ? <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-3"><ThemeToggle /></div> : null}
+      {isAuthenticated && !isOwnerRoute ? <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-3"><ThemeToggle /></div> : null}
       <RealtimeBridge />
       <main className={isOwnerRoute ? "owner-main" : "mx-auto w-full max-w-6xl px-4 py-6 sm:py-8"}>
         <Routes>

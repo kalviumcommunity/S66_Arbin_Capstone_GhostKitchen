@@ -38,7 +38,7 @@ export default function OwnerDashboard() {
   const [range, setRange] = useState("This month");
   const [activeDay, setActiveDay] = useState("Sat");
   return <div className="dashboard-page">
-    <div className="page-heading"><div><h1>Dashboard <span className="live-pill"><i /> Live</span></h1><p>Here’s what’s happening at Hearth & Table today.</p></div><div className="heading-actions"><button className="outline-btn" type="button">↓ <span>Export report</span></button><button className="primary-btn" type="button">＋ New order</button></div></div>
+    <div className="page-heading"><div><h1>Dashboard <span className="live-pill"><i /> Live</span></h1><p>Here’s what’s happening at Ghost Kitchen today.</p></div><div className="heading-actions"><button className="outline-btn" type="button">↓ <span>Export report</span></button><button className="primary-btn" type="button">＋ New order</button></div></div>
 
     <section className="stats-grid">{stats.map((stat) => <article className="stat-card" key={stat.label}><div className="stat-top"><span>{stat.label}</span><Icon>{stat.icon}</Icon></div><strong>{stat.value}</strong><div className={`stat-change ${stat.negative ? "is-negative" : ""}`}><b>{stat.change}</b><span>{stat.note}</span></div></article>)}</section>
 

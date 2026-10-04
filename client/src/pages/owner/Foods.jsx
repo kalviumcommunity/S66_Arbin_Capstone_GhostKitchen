@@ -13,7 +13,7 @@ const demoFoods = [
 
 const initialForm = { name: "", description: "", category: "Pasta", price: "", preparation: "20 min", ingredients: "", dietary: "", availability: true, promotion: "None", tax: "8.5", image: "" };
 const displayCategory = (value) => { const normalized = String(value || "").toLowerCase(); return normalized === "non-veg" ? "Chicken" : normalized === "dessert" ? "Desserts" : normalized === "sweet" ? "Desserts" : normalized === "main" ? "Dinner" : normalized || "Dinner"; };
-const normalizeFood = (food, index) => ({ ...food, category: food.category?.length > 2 ? displayCategory(food.category) : "Dinner", description: food.description || "A carefully prepared Hearth & Table favorite with seasonal ingredients.", averageRating: Number(food.averageRating || 4.6), totalReviews: Number(food.totalReviews || (120 + index * 13)), image: food.image || demoFoods[index % demoFoods.length].image, promotion: food.promotion || "", isAvailable: food.isAvailable !== false });
+const normalizeFood = (food, index) => ({ ...food, category: food.category?.length > 2 ? displayCategory(food.category) : "Dinner", description: food.description || "A carefully prepared Ghost Kitchen favorite with seasonal ingredients.", averageRating: Number(food.averageRating || 4.6), totalReviews: Number(food.totalReviews || (120 + index * 13)), image: food.image || demoFoods[index % demoFoods.length].image, promotion: food.promotion || "", isAvailable: food.isAvailable !== false });
 
 function FoodIcon({ type }) {
   const paths = { search: "m21 21-4.3-4.3M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4Z", plus: "M12 5v14M5 12h14", close: "M6 6l12 12M18 6 6 18", image: "M4 5h16v14H4zM4 16l4-4 3 3 3-4 6 5M8 9h.01", more: "M5 12h.01M12 12h.01M19 12h.01" };

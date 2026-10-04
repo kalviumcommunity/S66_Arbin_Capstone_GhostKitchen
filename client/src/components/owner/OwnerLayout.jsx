@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import ThemeToggle from "../ThemeToggle";
 
 const Icon = ({ name }) => {
   const paths = {
@@ -31,7 +32,7 @@ export default function OwnerLayout() {
   return (
     <section className="owner-shell">
       <aside className="owner-sidebar">
-        <div className="owner-brand"><span className="owner-brand-mark">H</span><span>Hearth<span>&</span>Table</span></div>
+        <div className="owner-brand"><img className="owner-brand-logo" src="/ghost-kitchen-logo.svg" alt="Ghost Kitchen" /><span>Ghost Kitchen</span></div>
         <div className="owner-venue"><span className="venue-dot" /><span><b>Downtown Kitchen</b><small>Open · Closes 11:00 PM</small></span><span className="chevron">⌄</span></div>
         <p className="owner-nav-label">Workspace</p>
         <nav className="owner-nav">{navItems.map(([label, to, icon]) => <NavLink key={label} to={to} className={linkClass}><Icon name={icon} /><span>{label}</span>{label === "Orders" ? <em>12</em> : null}</NavLink>)}</nav>
@@ -39,7 +40,7 @@ export default function OwnerLayout() {
       </aside>
 
       <div className="owner-content">
-        <header className="owner-header"><div className="owner-breadcrumb"><span>Workspace</span><b>/</b><strong>{pageLabel}</strong></div><div className="owner-header-actions"><label className="owner-search"><span>⌕</span><input aria-label="Search dashboard" placeholder="Search anything..." /></label><button className="header-icon" aria-label="Notifications" type="button">♢<i /></button><button className="header-icon" aria-label="Settings" type="button"><Icon name="settings" /></button><div className="profile"><span className="profile-avatar">AM</span><span><b>Alex Morgan</b><small>Administrator</small></span><span className="chevron">⌄</span></div></div></header>
+        <header className="owner-header"><div className="owner-breadcrumb"><span>Workspace</span><b>/</b><strong>{pageLabel}</strong></div><div className="owner-header-actions"><label className="owner-search"><span>⌕</span><input aria-label="Search dashboard" placeholder="Search anything..." /></label><button className="header-icon" aria-label="Notifications" type="button">♢<i /></button><ThemeToggle /><div className="profile"><span className="profile-avatar">AM</span><span><b>Alex Morgan</b><small>Administrator</small></span><span className="chevron">⌄</span></div></div></header>
         <Outlet />
       </div>
     </section>
