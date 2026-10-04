@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title>Ghost Kitchen</title>
+  <defs>
+    <radialGradient id="sky" cx="48%" cy="38%" r="72%">
+      <stop offset="0" stop-color="#8edaff"/>
+      <stop offset=".58" stop-color="#3b9ed0"/>
+      <stop offset="1" stop-color="#1d4261"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#cbe8f2"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="61" fill="#d8e3e8"/>
+  <circle cx="64" cy="64" r="58" fill="url(#sky)" stroke="#10273a" stroke-width="5"/>
+  <path d="M26 91V44m0 0v22m0-22h8v22m0-22v22m0-22h8v22m0-22v22m-16 0h16m-8 0v31" fill="none" stroke="#f7fbfc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M101 42 87 75m14-33 10 16m-10-16-7 18m7-18 7 18m-10-18v47" fill="none" stroke="#f7fbfc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M48 40c-4-3-8-7-8-13 0-8 7-13 15-13 3-7 9-10 16-10 8 0 14 4 17 11 7 0 13 5 13 13 0 6-4 11-9 13z" fill="#fff" stroke="#10273a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M48 40h48v14H48z" fill="#e9f5f8" stroke="#10273a" stroke-width="5"/>
+  <path d="M38 57c0-9 7-15 16-17h20c10 2 17 8 17 17v30c0 8 7 13 13 17-10 7-19 6-27 1-7 6-16 7-23 1-8 5-18 5-26-2 8-6 10-10 10-18z" fill="url(#body)" stroke="#10273a" stroke-width="5" stroke-linejoin="round"/>
+  <ellipse cx="54" cy="67" rx="5" ry="8" fill="#10273a"/>
+  <ellipse cx="76" cy="67" rx="5" ry="8" fill="#10273a"/>
+  <path d="M57 81c4 5 10 6 15 0" fill="none" stroke="#10273a" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="30" cy="32" r="3" fill="#fff" opacity=".9"/>
+</svg>

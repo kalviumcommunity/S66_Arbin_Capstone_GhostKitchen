@@ -4,7 +4,12 @@
 
 body {
   @apply m-0 min-h-screen bg-slate-50 text-slate-900;
+  font-family: "Cascadia Code", "Cascadia Mono", monospace;
   transition: background-color 180ms ease, color 180ms ease;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 #root {

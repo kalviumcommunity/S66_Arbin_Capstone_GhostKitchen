@@ -15,4 +15,9 @@ export const useThemeStore = create((set) => ({
     localStorage.setItem(STORAGE_KEY, theme);
     set({ theme });
   },
+  cycleTheme: () => set((state) => {
+    const nextTheme = themes[(themes.indexOf(state.theme) + 1) % themes.length];
+    localStorage.setItem(STORAGE_KEY, nextTheme);
+    return { theme: nextTheme };
+  }),
 }));

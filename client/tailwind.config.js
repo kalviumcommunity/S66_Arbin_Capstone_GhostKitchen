@@ -13,6 +13,9 @@ export default {
           700: "#c2410c",
         },
       },
+      fontFamily: {
+        sans: ["Cascadia Code", "Cascadia Mono", "monospace"],
+      },
     },
   },
   plugins: [],
