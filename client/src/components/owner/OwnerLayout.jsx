@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "../ThemeToggle";
 
 const Icon = ({ name }) => {
@@ -27,6 +28,8 @@ const linkClass = ({ isActive }) => `owner-nav-item ${isActive ? "is-active" : "
 
 export default function OwnerLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
   const currentPage = location.pathname.split("/").filter(Boolean).pop() || "dashboard";
   const pageLabel = currentPage.charAt(0).toUpperCase() + currentPage.slice(1);
   return (
@@ -40,7 +43,7 @@ export default function OwnerLayout() {
       </aside>
 
       <div className="owner-content">
-        <header className="owner-header"><div className="owner-breadcrumb"><span>Workspace</span><b>/</b><strong>{pageLabel}</strong></div><div className="owner-header-actions"><label className="owner-search"><span>⌕</span><input aria-label="Search dashboard" placeholder="Search anything..." /></label><button className="header-icon" aria-label="Notifications" type="button">♢<i /></button><ThemeToggle /><div className="profile"><span className="profile-avatar">AM</span><span><b>Alex Morgan</b><small>Administrator</small></span><span className="chevron">⌄</span></div></div></header>
+        <header className="owner-header"><div className="owner-breadcrumb"><span>Workspace</span><b>/</b><strong>{pageLabel}</strong></div><div className="owner-header-actions"><form className="owner-search" onSubmit={(event) => { event.preventDefault(); navigate(`/owner/orders?search=${encodeURIComponent(search.trim())}`); }}><span>⌕</span><input aria-label="Search dashboard" value={search} onChange={(event) => setSearch(event.target.value)} /></form><ThemeToggle /><div className="profile"><span className="profile-avatar">AM</span><span><b>Alex Morgan</b><small>Administrator</small></span><span className="chevron">⌄</span></div></div></header>
         <Outlet />
       </div>
     </section>

@@ -2,8 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --page-bg: #f8f6f2;
+  --card-bg: #ffffff;
+  --primary-text: #272421;
+  --secondary-text: #938c85;
+  --border-color: #ebe5de;
+  --accent-color: #e96d32;
+  --input-bg: transparent;
+}
+
+html.theme-dark {
+  --page-bg: #0e0e0e;
+  --card-bg: #151515;
+  --primary-text: #f4f4f5;
+  --secondary-text: #d4d4d8;
+  --border-color: #4b5563;
+  --accent-color: #fb923c;
+  --input-bg: transparent;
+}
+
+html.theme-night {
+  --page-bg: #080d1c;
+  --card-bg: #111a32;
+  --primary-text: #f8fafc;
+  --secondary-text: #dbeafe;
+  --border-color: #52658f;
+  --accent-color: #fb923c;
+  --input-bg: transparent;
+}
+
 body {
   @apply m-0 min-h-screen bg-slate-50 text-slate-900;
+  background-color: var(--page-bg);
+  color: var(--primary-text);
   font-family: "Cascadia Code", "Cascadia Mono", monospace;
   transition: background-color 180ms ease, color 180ms ease;
 }
@@ -14,6 +46,18 @@ button, input, select, textarea {
 
 #root {
   @apply min-h-screen;
+}
+
+/* Search fields use their accessible labels instead of placeholder copy. */
+.owner-search input::placeholder,
+.menu-search input::placeholder,
+.orders-search input::placeholder,
+.conversation-search input::placeholder,
+.purchase-header-search input::placeholder,
+.purchase-search input::placeholder,
+.reviews-header-search input::placeholder,
+.review-filter-search input::placeholder {
+  color: transparent;
 }
 
 .home-panel {
@@ -62,10 +106,7 @@ html.theme-night {
 }
 
 html.theme-dark body,
-html.theme-night body {
-  background: #0f172a;
-  color: #e2e8f0;
-}
+html.theme-night body { background-color: var(--page-bg); color: var(--primary-text); }
 
 html.theme-dark .bg-white,
 html.theme-night .bg-white {
@@ -114,25 +155,8 @@ html.theme-night .border-slate-300 {
   border-color: #475569;
 }
 
-html.theme-dark input,
-html.theme-dark select,
-html.theme-dark textarea,
-html.theme-night input,
-html.theme-night select,
-html.theme-night textarea {
-  background-color: #1e293b;
-  color: #f8fafc;
-}
-
-html.theme-dark input::placeholder,
-html.theme-dark textarea::placeholder,
-html.theme-night input::placeholder,
-html.theme-night textarea::placeholder {
-  color: #94a3b8;
-}
-
 html.theme-night body {
-  background: #080d1c;
+  background: var(--page-bg);
 }
 
 html.theme-night .bg-white {
@@ -152,7 +176,7 @@ html.theme-night .bg-slate-200 {
 }
 
 html.theme-dark body {
-  background-color: #080808;
+  background-color: var(--page-bg);
   background-image:
     radial-gradient(ellipse at 14% 8%, rgb(255 255 255 / 7%), transparent 34%),
     radial-gradient(ellipse at 86% 22%, rgb(255 255 255 / 4%), transparent 30%),
@@ -198,14 +222,6 @@ html.theme-dark .text-slate-500 {
 html.theme-dark .border-slate-200,
 html.theme-dark .border-slate-300 {
   border-color: #303030;
-}
-
-html.theme-dark input,
-html.theme-dark select,
-html.theme-dark textarea {
-  background-color: #111111;
-  border-color: #303030;
-  color: #f4f4f5;
 }
 
 html.theme-dark .home-panel {
