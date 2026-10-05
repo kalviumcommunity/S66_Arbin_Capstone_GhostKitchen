@@ -35,7 +35,6 @@ export default function Menu() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by food name"
           className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-brand-500 focus:ring"
         />
 

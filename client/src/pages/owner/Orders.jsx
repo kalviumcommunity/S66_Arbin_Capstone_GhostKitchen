@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useOwnerOrderStore } from "../../stores/ownerOrderStore";
 
 const demoOrders = [
@@ -29,10 +30,11 @@ function OrderChart() {
 }
 
 export default function OwnerOrders() {
+  const [searchParams] = useSearchParams();
   const orders = useOwnerOrderStore((state) => state.orders);
   const fetchOrders = useOwnerOrderStore((state) => state.fetchOrders);
   const updateStatus = useOwnerOrderStore((state) => state.updateStatus);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState("All status");
   const [typeFilter, setTypeFilter] = useState("All types");
   const [sort, setSort] = useState("Newest first");
