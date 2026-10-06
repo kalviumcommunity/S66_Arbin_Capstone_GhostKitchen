@@ -20,6 +20,9 @@ html.theme-dark {
   --border-color: #4b5563;
   --accent-color: #fb923c;
   --input-bg: transparent;
+  --message-bg: #263244;
+  --message-text: #f8fafc;
+  --message-meta: #dbeafe;
 }
 
 html.theme-night {
@@ -30,6 +33,9 @@ html.theme-night {
   --border-color: #52658f;
   --accent-color: #fb923c;
   --input-bg: transparent;
+  --message-bg: #1e3a5f;
+  --message-text: #f8fafc;
+  --message-meta: #dbeafe;
 }
 
 body {
@@ -110,49 +116,49 @@ html.theme-night body { background-color: var(--page-bg); color: var(--primary-t
 
 html.theme-dark .bg-white,
 html.theme-night .bg-white {
-  background-color: #1e293b;
+  background-color: var(--card-bg);
 }
 
 html.theme-dark .bg-slate-50,
 html.theme-night .bg-slate-50 {
-  background-color: #0f172a;
+  background-color: var(--page-bg);
 }
 
 html.theme-dark .bg-slate-100,
 html.theme-night .bg-slate-100 {
-  background-color: #334155;
+  background-color: var(--card-bg);
 }
 
 html.theme-dark .bg-slate-200,
 html.theme-night .bg-slate-200 {
-  background-color: #475569;
+  background-color: var(--border-color);
 }
 
 html.theme-dark .text-slate-900,
 html.theme-night .text-slate-900 {
-  color: #f8fafc;
+  color: var(--primary-text);
 }
 
 html.theme-dark .text-slate-700,
 html.theme-night .text-slate-700 {
-  color: #cbd5e1;
+  color: var(--secondary-text);
 }
 
 html.theme-dark .text-slate-600,
 html.theme-night .text-slate-600 {
-  color: #cbd5e1;
+  color: var(--secondary-text);
 }
 
 html.theme-dark .text-slate-500,
 html.theme-night .text-slate-500 {
-  color: #94a3b8;
+  color: var(--secondary-text);
 }
 
 html.theme-dark .border-slate-200,
 html.theme-night .border-slate-200,
 html.theme-dark .border-slate-300,
 html.theme-night .border-slate-300 {
-  border-color: #475569;
+  border-color: var(--border-color);
 }
 
 html.theme-night body {
@@ -160,19 +166,19 @@ html.theme-night body {
 }
 
 html.theme-night .bg-white {
-  background-color: #111a32;
+  background-color: var(--card-bg);
 }
 
 html.theme-night .bg-slate-50 {
-  background-color: #080d1c;
+  background-color: var(--page-bg);
 }
 
 html.theme-night .bg-slate-100 {
-  background-color: #17213d;
+  background-color: var(--card-bg);
 }
 
 html.theme-night .bg-slate-200 {
-  background-color: #243252;
+  background-color: var(--border-color);
 }
 
 html.theme-dark body {
@@ -185,43 +191,43 @@ html.theme-dark body {
 }
 
 html.theme-dark .bg-white {
-  background-color: #151515;
+  background-color: var(--card-bg);
   background-image:
     radial-gradient(ellipse at 12% 0%, rgb(255 255 255 / 4%), transparent 42%),
     radial-gradient(ellipse at 92% 100%, rgb(255 255 255 / 2%), transparent 44%);
 }
 
 html.theme-dark .bg-slate-50 {
-  background-color: #0e0e0e;
+  background-color: var(--page-bg);
 }
 
 html.theme-dark .bg-slate-100 {
-  background-color: #1d1d1d;
+  background-color: var(--card-bg);
 }
 
 html.theme-dark .bg-slate-200 {
-  background-color: #2b2b2b;
+  background-color: var(--border-color);
 }
 
 html.theme-dark .text-slate-900 {
-  color: #f4f4f5;
+  color: var(--primary-text);
 }
 
 html.theme-dark .text-slate-700 {
-  color: #d4d4d8;
+  color: var(--secondary-text);
 }
 
 html.theme-dark .text-slate-600 {
-  color: #b8b8be;
+  color: var(--secondary-text);
 }
 
 html.theme-dark .text-slate-500 {
-  color: #929298;
+  color: var(--secondary-text);
 }
 
 html.theme-dark .border-slate-200,
 html.theme-dark .border-slate-300 {
-  border-color: #303030;
+  border-color: var(--border-color);
 }
 
 html.theme-dark .home-panel {
