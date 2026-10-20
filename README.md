@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="client/public/ghost-kitchen-logo.svg" alt="Ghost Kitchen logo" width="96" />
+  <img src="client/public/ghost-kitchen-logo.jpeg" alt="Ghost Kitchen logo" width="96" />
 </p>
 
 <h1 align="center">Ghost Kitchen</h1>
