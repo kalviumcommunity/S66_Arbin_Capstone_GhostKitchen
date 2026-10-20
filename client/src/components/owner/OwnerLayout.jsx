@@ -35,7 +35,7 @@ export default function OwnerLayout() {
   return (
     <section className="owner-shell">
       <aside className="owner-sidebar">
-        <div className="owner-brand"><img className="owner-brand-logo" src="/ghost-kitchen-logo.svg" alt="Ghost Kitchen" /><span>Ghost Kitchen</span></div>
+        <div className="owner-brand"><img className="owner-brand-logo" src="/ghost-kitchen-logo.jpeg" alt="Ghost Kitchen" /><span>Ghost Kitchen</span></div>
         <div className="owner-venue"><span className="venue-dot" /><span><b>Downtown Kitchen</b><small>Open · Closes 11:00 PM</small></span><span className="chevron">⌄</span></div>
         <p className="owner-nav-label">Workspace</p>
         <nav className="owner-nav">{navItems.map(([label, to, icon]) => <NavLink key={label} to={to} className={linkClass}><Icon name={icon} /><span>{label}</span>{label === "Orders" ? <em>12</em> : null}</NavLink>)}</nav>
