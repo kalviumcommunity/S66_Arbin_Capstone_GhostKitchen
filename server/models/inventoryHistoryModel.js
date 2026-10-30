@@ -9,7 +9,7 @@ const inventoryHistorySchema = new mongoose.Schema(
     },
     changeType: {
       type: String,
-      enum: ["manual_adjustment", "order_placed"],
+      enum: ["manual_adjustment", "order_placed", "order_cancelled"],
       required: true,
     },
     previousStock: {

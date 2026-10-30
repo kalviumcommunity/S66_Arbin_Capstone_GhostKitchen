@@ -35,7 +35,8 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 - Customer registration, login, logout, profile access, and Google sign-in support
 - Menu search, categories, bestsellers, combos, and availability filtering
 - Cart management and authenticated checkout
-- Order history, order details, reorder, and live order tracking
+- Order history with original item snapshots, order details, reorder, and live order tracking
+- Retry-safe checkout and pending-order cancellation with stock restoration
 - Food ratings and reviews with editing and helpful votes
 - Persisted Light, Dark, and Night themes
 
@@ -44,7 +45,7 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 - Protected owner login and role-based dashboard access
 - Dashboard statistics, revenue trends, order status charts, and top-selling items
 - Food CRUD with pricing, category, stock, and availability controls
-- Order listing, status updates, and deletion
+- Order listing, sequential status updates, pending-order cancellation, and terminal-order archiving
 - Inventory quantities, low-stock alerts, stock history, and automatic stock reduction
 - Real-time order and inventory notifications
 - Review management and owner responses
@@ -70,7 +71,7 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 
 - [Node.js](https://nodejs.org/) 18 or newer
 - npm
-- [MongoDB Atlas](https://www.mongodb.com/atlas) or a local MongoDB instance
+- [MongoDB Atlas](https://www.mongodb.com/atlas) or a local MongoDB replica set (ordering requires transactions)
 - A Google OAuth web client ID if Google sign-in is enabled
 
 ### Clone and install
@@ -149,11 +150,15 @@ Run these commands from `server/`:
 | --- | --- |
 | `npm run dev` | Start the API with Nodemon |
 | `npm start` | Start the API with Node.js |
-| `npm test` | Placeholder until automated server tests are added |
+| `npm test` | Run order integration/concurrency and item-rendering tests against a disposable MongoDB replica set |
 
 ## API Overview
 
 The API base path is `/api`. Protected endpoints require an `Authorization: Bearer <token>` header.
+
+Order creation also requires an `Idempotency-Key` header. See
+[`docs/order-reliability.md`](docs/order-reliability.md) for retry behavior,
+cancellation rules, item snapshots, and database setup.
 
 | Area | Main endpoints |
 | --- | --- |
@@ -230,7 +235,9 @@ npm run build
 
 Use [`guidance.md`](guidance.md) for the manual API and UI checklist. Bruno requests in `Endpoints Check/` cover authentication, foods, orders, and the root endpoint.
 
-Automated tests are not available yet. Running `npm test` from `server/` intentionally reports that status until Phase 8 testing work is completed.
+Run `npm test` from `server/` for automated order reliability and historical-item
+tests. Test tooling requires Node.js 20.19+; the first run downloads a MongoDB
+binary. Broader application and end-to-end test coverage remains part of Phase 8.
 
 ## Contributing
 

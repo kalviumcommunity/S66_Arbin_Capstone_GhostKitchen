@@ -6,6 +6,7 @@ import {
   createOrder,
   deleteOrder,
   updateOrderStatus,
+  cancelOrder,
 } from "../controllers/orderController.js";
 import protect from "../middleware/authMiddleware.js";
 import authorizeRoles from "../middleware/roleMiddleware.js";
@@ -16,6 +17,7 @@ router.get("/", protect, authorizeRoles("owner"), getAllOrders);
 router.get("/me", protect, authorizeRoles("customer", "owner"), getMyOrders);
 router.get("/me/:id", protect, authorizeRoles("customer", "owner"), getMyOrderById);
 router.post("/", protect, authorizeRoles("customer", "owner"), createOrder);
+router.patch("/:id/cancel", protect, authorizeRoles("customer", "owner"), cancelOrder);
 router.patch("/:id/status", protect, authorizeRoles("owner"), updateOrderStatus);
 router.delete("/:id", protect, authorizeRoles("owner"), deleteOrder);
 
