@@ -1,4 +1,5 @@
 import OrderStatusBadge from "./OrderStatusBadge";
+import { getOrderItems } from "../utils/orderItems";
 
 const statuses = ["pending", "preparing", "ready", "completed"];
 
@@ -29,7 +30,7 @@ export default function OrderTracker({ order }) {
       )}
 
       <div className="mt-7 border-t border-slate-100 pt-4 text-sm text-slate-600">
-        <p>{order.foods?.map((food) => food.name).join(", ") || "Order items"}</p>
+        <p>{getOrderItems(order).map((item) => `${item.name} × ${item.quantity}`).join(", ") || "Order items"}</p>
         <p className="mt-1 text-xs text-slate-500">Placed {new Date(order.createdAt).toLocaleString()}</p>
       </div>
     </section>

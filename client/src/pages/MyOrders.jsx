@@ -12,6 +12,8 @@ export default function MyOrders() {
   const loading = useOrderStore((state) => state.loading);
   const error = useOrderStore((state) => state.error);
   const fetchMyOrders = useOrderStore((state) => state.fetchMyOrders);
+  const cancelOrder = useOrderStore((state) => state.cancelOrder);
+  const cancellingId = useOrderStore((state) => state.cancellingId);
   const addItem = useCartStore((state) => state.addItem);
   const submitReview = useReviewStore((state) => state.submitReview);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -19,7 +21,7 @@ export default function MyOrders() {
 
   const handleReorder = (order) => {
     if (!order?.foods?.length) return;
-    order.foods.forEach((food) => addItem(food));
+    order.foods.filter((food) => food && food.isAvailable !== false).forEach((food) => addItem(food));
   };
 
   useEffect(() => {
@@ -52,10 +54,10 @@ export default function MyOrders() {
         <p className="mt-4 text-slate-600">No orders yet.</p>
       ) : null}
 
-      {!loading && !error && orders.length ? (
+      {!loading && orders.length ? (
         <div className="mt-6 space-y-4">
           {orders.map((order) => (
-            <OrderCard key={order._id} order={order} onReorder={handleReorder} />
+            <OrderCard key={order._id} order={order} onReorder={handleReorder} onCancel={cancelOrder} cancelling={cancellingId === order._id} cancelDisabled={cancellingId !== null} />
           ))}
         </div>
       ) : null}

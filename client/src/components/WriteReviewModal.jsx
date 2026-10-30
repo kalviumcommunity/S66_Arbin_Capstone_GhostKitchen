@@ -19,7 +19,7 @@ export default function WriteReviewModal({ open, onClose, orderOptions = [], onS
   if (!open) return null;
 
   const selectedOrder = orderOptions.find((order) => order._id === form.orderId);
-  const foodOptions = selectedOrder?.foods || [];
+  const foodOptions = (selectedOrder?.foods || []).filter(Boolean);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
