@@ -37,6 +37,7 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 - Cart management and authenticated checkout
 - Order history with original item snapshots, order details, reorder, and live order tracking
 - Retry-safe checkout and pending-order cancellation with stock restoration
+- Cash-on-delivery and Razorpay test-mode online checkout, payment/refund tracking, and downloadable receipts
 - Food ratings and reviews with editing and helpful votes
 - Persisted Light, Dark, and Night themes
 
@@ -50,6 +51,8 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 - Real-time order and inventory notifications
 - Review management and owner responses
 - Owner workspace areas for messages, calendar, and purchase orders
+- Persistent supplier purchasing, partial delivery receiving, and CSV exports
+- Separate ingredient inventory with staff-recorded usage/waste, period summaries, stock history, and low-stock alerts
 
 ## Tech Stack
 
@@ -100,6 +103,12 @@ OWNER_REGISTRATION_CODE=your_owner_registration_code
 OWNER_LOGIN_EMAIL=owner@example.com
 OWNER_LOGIN_PASSWORD=change_this_password
 GOOGLE_CLIENT_ID=your_google_oauth_web_client_id
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+PAYMENT_CRON_SECRET=
+RECEIPT_BUSINESS_NAME=Ghost Kitchen
+RECEIPT_BUSINESS_ADDRESS=
 ```
 
 Create `client/.env` from `client/.env.example`:
@@ -160,6 +169,10 @@ Order creation also requires an `Idempotency-Key` header. See
 [`docs/order-reliability.md`](docs/order-reliability.md) for retry behavior,
 cancellation rules, item snapshots, and database setup.
 
+See [`docs/purchasing-payments.md`](docs/purchasing-payments.md) for supplier and
+ingredient workflows, Razorpay test keys/webhooks, scheduled payment maintenance,
+receipt downloads, and the deferred time-based cancellation deduction policy.
+
 | Area | Main endpoints |
 | --- | --- |
 | Authentication | `POST /auth/register`, `POST /auth/login`, `POST /auth/google`, `GET /auth/me`, `PUT /auth/profile` |
@@ -168,6 +181,8 @@ cancellation rules, item snapshots, and database setup.
 | Analytics | Owner dashboard data at `GET /analytics/dashboard` |
 | Inventory | Inventory, low-stock, history, and stock update endpoints under `/inventory` |
 | Reviews | Food reviews, customer review management, helpful votes, and owner responses under `/reviews` |
+| Purchasing | Owner supplier, ingredient stock/history, and purchase-order endpoints under `/procurement` |
+| Payments | Checkout initialization/verification, receipts, refunds, cash collection, webhooks, and maintenance under `/payments` |
 
 The Bruno request collection is available in `Endpoints Check/`.
 
@@ -214,7 +229,8 @@ The Bruno request collection is available in `Endpoints Check/`.
 
 ### Planned Enhancements
 
-- Payment gateway integration
+- Time-based cancellation windows and refund deductions (a follow-up phase)
+- Automatic recipe-based ingredient consumption
 - Email and SMS notifications
 - Loyalty programs and coupons
 - Multi-location kitchen support

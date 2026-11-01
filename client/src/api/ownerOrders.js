@@ -6,6 +6,6 @@ export const getOwnerOrders = async () => {
 };
 
 export const patchOwnerOrderStatus = async (orderId, status) => {
-  const { data } = await api.patch(`/orders/${orderId}/status`, { status });
+  const { data } = await api.patch(`/orders/${orderId}/status`, { status }, { timeout: 45000 });
   return data;
 };

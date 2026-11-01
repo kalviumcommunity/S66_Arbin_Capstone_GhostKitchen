@@ -4,7 +4,7 @@ export default function OrderSuccess() {
   return (
     <section className="mx-auto max-w-xl rounded-xl border border-emerald-200 bg-emerald-50 p-8 text-center shadow-sm">
       <h1 className="text-2xl font-bold text-emerald-800">Order placed successfully</h1>
-      <p className="mt-2 text-emerald-700">Your kitchen has started preparing your order.</p>
+      <p className="mt-2 text-emerald-700">Your order has been received. Follow its status and payment details in My Orders.</p>
 
       <div className="mt-6 flex justify-center gap-3">
         <Link

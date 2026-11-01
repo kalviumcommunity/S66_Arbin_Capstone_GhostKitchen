@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import "./procurement.css";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";

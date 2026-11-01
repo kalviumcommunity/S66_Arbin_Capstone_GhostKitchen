@@ -22,11 +22,15 @@ function normalizeRequest(user, body, key) {
       throw new OrderError(400, `${field} must be a string.`);
     }
   }
+  const paymentMethod = body.paymentMethod ?? "cod";
+  if (!["cod", "razorpay"].includes(paymentMethod)) throw new OrderError(400, "Choose cash on delivery or Razorpay.");
   const request = {
     customerName: body.customerName?.trim() || user.username,
     phone: body.phone?.trim() || "",
     address: body.address?.trim() || "",
     foods: body.foods.map((id) => id.toLowerCase()).sort(),
+    // Preserve canonical hashes for pre-payment COD checkouts from the previous phase.
+    ...(paymentMethod === "razorpay" ? { paymentMethod } : {}),
   };
   return { request, requestHash: createHash("sha256").update(JSON.stringify(request)).digest("hex") };
 }
@@ -74,7 +78,11 @@ export async function placeOrder(user, body, key) {
       const [order] = await Order.create([{
         ...request, userId: user._id, items, idempotencyKey: key, requestHash,
         totalPrice: money(items.reduce((total, item) => total + item.lineTotal, 0)),
+        paymentStatus: request.paymentMethod === "razorpay" ? "pending" : "unpaid",
+        payment: { amountPaise: items.reduce((total, item) => total + Math.round(item.lineTotal * 100), 0), currency: "INR" },
+        paymentExpiresAt: request.paymentMethod === "razorpay" ? new Date(Date.now() + 15 * 60000) : undefined,
       }], { session });
+      if (order.paymentMethod === "razorpay" && order.payment.amountPaise < 100) throw new OrderError(400, "Online payment requires an order total of at least INR 1.00.");
       await InventoryHistory.create(histories.map((history) => ({ ...history, orderId: order._id })), { session, ordered: true });
       return { order, replayed: false };
     });
@@ -88,7 +96,7 @@ export async function placeOrder(user, body, key) {
   }
 }
 
-export async function changeOrderStatus(user, orderId, status) {
+export async function changeOrderStatus(user, orderId, status, { expireOnly = false } = {}) {
   if (!mongoose.isObjectIdOrHexString(orderId)) throw new OrderError(400, "Invalid order ID.");
   if (!Object.hasOwn(ORDER_TRANSITIONS, status)) {
     throw new OrderError(400, "Invalid order status.");
@@ -97,6 +105,9 @@ export async function changeOrderStatus(user, orderId, status) {
     const filter = { _id: orderId, ...(user.role === "owner" ? {} : { userId: user._id }) };
     const order = await Order.findOne(filter).session(session);
     if (!order) throw new OrderError(404, "Order not found.");
+    if (expireOnly && (order.status !== "pending" || order.paymentMethod !== "razorpay" || order.paymentStatus !== "pending" || !order.paymentExpiresAt || order.paymentExpiresAt > new Date())) {
+      return { order, changed: false };
+    }
     // Retried cancellation/status requests are safe no-ops, never repeated inventory writes.
     if (status === order.status && (user.role === "owner" || status === "cancelled")) {
       return { order, changed: false };
@@ -104,32 +115,40 @@ export async function changeOrderStatus(user, orderId, status) {
     if (!allowedOrderStatuses(order, user.role).includes(status)) {
       throw new OrderError(409, `Cannot move an order from ${order.status} to ${status}.`);
     }
-    order.status = status;
-    if (status === "cancelled" && !order.stockRestoredAt) {
-      const quantities = new Map();
-      // Legacy orders still use their original repeated food IDs for restoration.
-      if (order.items?.length) {
-        for (const item of order.items) quantities.set(String(item.foodId), item.quantity);
-      } else {
-        for (const id of order.foods) quantities.set(String(id), (quantities.get(String(id)) || 0) + 1);
-      }
-      for (const [foodId, quantity] of [...quantities].sort(([a], [b]) => a.localeCompare(b))) {
-        const food = await Food.findOneAndUpdate({ _id: foodId }, { $inc: { stockQuantity: quantity } }, { session, new: true });
-        // Deleted menu items remain in the snapshot but no longer have inventory to restore.
-        if (!food) continue;
-        const previousStock = food.stockQuantity - quantity;
-        if (previousStock === 0) {
-          food.isAvailable = true;
-          await food.save({ session });
-        }
-        await InventoryHistory.create([{
-          foodId, changeType: "order_cancelled", previousStock, quantityChange: quantity,
-          newStock: food.stockQuantity, updatedBy: user._id, orderId: order._id,
-        }], { session });
-      }
-      order.stockRestoredAt = new Date();
-    }
+    if (status === "cancelled") await cancelWithinTransaction(order, user, session, expireOnly ? "payment_timeout" : "requested");
+    else order.status = status;
     await order.save({ session });
     return { order, changed: true };
   });
+}
+
+export async function cancelWithinTransaction(order, user, session, reason) {
+  order.status = "cancelled";
+  order.cancellationReason = reason;
+  if (!order.stockRestoredAt) {
+    const quantities = new Map();
+    if (order.items?.length) {
+      for (const item of order.items) quantities.set(String(item.foodId), item.quantity);
+    } else {
+      for (const id of order.foods) quantities.set(String(id), (quantities.get(String(id)) || 0) + 1);
+    }
+    for (const [foodId, quantity] of [...quantities].sort(([a], [b]) => a.localeCompare(b))) {
+      const food = await Food.findOneAndUpdate({ _id: foodId }, { $inc: { stockQuantity: quantity } }, { session, new: true });
+      if (!food) continue;
+      const previousStock = food.stockQuantity - quantity;
+      if (previousStock === 0) { food.isAvailable = true; await food.save({ session }); }
+      await InventoryHistory.create([{
+        foodId, changeType: "order_cancelled", previousStock, quantityChange: quantity,
+        newStock: food.stockQuantity, updatedBy: user?._id || order.userId, orderId: order._id,
+      }], { session });
+    }
+    order.stockRestoredAt = new Date();
+  }
+  if (order.paymentMethod === "razorpay" && order.paymentStatus === "paid") {
+    order.paymentStatus = "refund_pending";
+    order.payment.refundStatus = "requested";
+    order.payment.refundAmountPaise = order.payment.amountPaise;
+  } else if (order.paymentMethod === "razorpay" && order.paymentStatus === "pending") {
+    order.paymentStatus = "unpaid";
+  }
 }

@@ -2,6 +2,7 @@ import Order from "../models/orderModel.js";
 import { emitToOwners, emitToUser } from "../socket/socketServer.js";
 import { changeOrderStatus, placeOrder } from "../services/orderService.js";
 import { orderActions } from "../services/orderPolicy.js";
+import { paymentService } from "../services/paymentService.js";
 
 function sendError(res, error, fallback) {
   if (error.status) return res.status(error.status).json({ message: error.message });
@@ -17,6 +18,7 @@ function sendError(res, error, fallback) {
 
 export const getAllOrders = async (req, res) => {
   try {
+    await (req.app.locals.payments || paymentService).expireUnpaid();
     const orders = await Order.find({ archivedAt: { $exists: false } }).populate("foods").sort({ createdAt: -1 });
     res.json(orders.map((order) => orderActions(order, req.user.role)));
   } catch (error) {
@@ -26,6 +28,9 @@ export const getAllOrders = async (req, res) => {
 
 export const createOrder = async (req, res) => {
   try {
+    const payments = req.app.locals.payments || paymentService;
+    if (req.body?.paymentMethod === "razorpay") payments.gateway.assertConfigured();
+    await payments.expireUnpaid();
     const { order, replayed } = await placeOrder(req.user, req.body || {}, req.get("Idempotency-Key"));
     await order.populate("foods");
     const customerOrder = orderActions(order, "customer");
@@ -43,6 +48,7 @@ export const createOrder = async (req, res) => {
 
 export const getMyOrders = async (req, res) => {
   try {
+    await (req.app.locals.payments || paymentService).expireUnpaid();
     const orders = await Order.find({ userId: req.user._id }).populate("foods").sort({ createdAt: -1 });
     res.json(orders.map((order) => orderActions(order, "customer")));
   } catch (error) {
@@ -52,6 +58,7 @@ export const getMyOrders = async (req, res) => {
 
 export const getMyOrderById = async (req, res) => {
   try {
+    await (req.app.locals.payments || paymentService).expireUnpaid();
     const order = await Order.findOne({ _id: req.params.id, userId: req.user._id }).populate("foods");
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json(orderActions(order, "customer"));
@@ -79,7 +86,12 @@ export const deleteOrder = async (req, res) => {
 
 async function handleStatusChange(req, res, status) {
   try {
-    const { order, changed } = await changeOrderStatus(req.user, req.params.id, status);
+    const result = await changeOrderStatus(req.user, req.params.id, status);
+    let { order } = result;
+    const { changed } = result;
+    if (status === "cancelled" && ["refund_pending", "refund_failed"].includes(order.paymentStatus)) {
+      order = await (req.app.locals.payments || paymentService).refund(order._id);
+    }
     await order.populate("foods");
     if (changed) {
       emitToOwners("owner:order:updated", {
