@@ -35,7 +35,9 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 - Customer registration, login, logout, profile access, and Google sign-in support
 - Menu search, categories, bestsellers, combos, and availability filtering
 - Cart management and authenticated checkout
-- Order history, order details, reorder, and live order tracking
+- Order history with original item snapshots, order details, reorder, and live order tracking
+- Retry-safe checkout and pending-order cancellation with stock restoration
+- Cash-on-delivery and Razorpay test-mode online checkout, payment/refund tracking, and downloadable receipts
 - Food ratings and reviews with editing and helpful votes
 - Persisted Light, Dark, and Night themes
 
@@ -44,11 +46,13 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 - Protected owner login and role-based dashboard access
 - Dashboard statistics, revenue trends, order status charts, and top-selling items
 - Food CRUD with pricing, category, stock, and availability controls
-- Order listing, status updates, and deletion
+- Order listing, sequential status updates, pending-order cancellation, and terminal-order archiving
 - Inventory quantities, low-stock alerts, stock history, and automatic stock reduction
 - Real-time order and inventory notifications
 - Review management and owner responses
 - Owner workspace areas for messages, calendar, and purchase orders
+- Persistent supplier purchasing, partial delivery receiving, and CSV exports
+- Separate ingredient inventory with staff-recorded usage/waste, period summaries, stock history, and low-stock alerts
 
 ## Tech Stack
 
@@ -70,7 +74,7 @@ Cloud kitchens need more than a menu and an order form. Ghost Kitchen is designe
 
 - [Node.js](https://nodejs.org/) 18 or newer
 - npm
-- [MongoDB Atlas](https://www.mongodb.com/atlas) or a local MongoDB instance
+- [MongoDB Atlas](https://www.mongodb.com/atlas) or a local MongoDB replica set (ordering requires transactions)
 - A Google OAuth web client ID if Google sign-in is enabled
 
 ### Clone and install
@@ -99,6 +103,12 @@ OWNER_REGISTRATION_CODE=your_owner_registration_code
 OWNER_LOGIN_EMAIL=owner@example.com
 OWNER_LOGIN_PASSWORD=change_this_password
 GOOGLE_CLIENT_ID=your_google_oauth_web_client_id
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+PAYMENT_CRON_SECRET=
+RECEIPT_BUSINESS_NAME=Ghost Kitchen
+RECEIPT_BUSINESS_ADDRESS=
 ```
 
 Create `client/.env` from `client/.env.example`:
@@ -149,11 +159,19 @@ Run these commands from `server/`:
 | --- | --- |
 | `npm run dev` | Start the API with Nodemon |
 | `npm start` | Start the API with Node.js |
-| `npm test` | Placeholder until automated server tests are added |
+| `npm test` | Run order integration/concurrency and item-rendering tests against a disposable MongoDB replica set |
 
 ## API Overview
 
 The API base path is `/api`. Protected endpoints require an `Authorization: Bearer <token>` header.
+
+Order creation also requires an `Idempotency-Key` header. See
+[`docs/order-reliability.md`](docs/order-reliability.md) for retry behavior,
+cancellation rules, item snapshots, and database setup.
+
+See [`docs/purchasing-payments.md`](docs/purchasing-payments.md) for supplier and
+ingredient workflows, Razorpay test keys/webhooks, scheduled payment maintenance,
+receipt downloads, and the deferred time-based cancellation deduction policy.
 
 | Area | Main endpoints |
 | --- | --- |
@@ -163,6 +181,8 @@ The API base path is `/api`. Protected endpoints require an `Authorization: Bear
 | Analytics | Owner dashboard data at `GET /analytics/dashboard` |
 | Inventory | Inventory, low-stock, history, and stock update endpoints under `/inventory` |
 | Reviews | Food reviews, customer review management, helpful votes, and owner responses under `/reviews` |
+| Purchasing | Owner supplier, ingredient stock/history, and purchase-order endpoints under `/procurement` |
+| Payments | Checkout initialization/verification, receipts, refunds, cash collection, webhooks, and maintenance under `/payments` |
 
 The Bruno request collection is available in `Endpoints Check/`.
 
@@ -209,7 +229,8 @@ The Bruno request collection is available in `Endpoints Check/`.
 
 ### Planned Enhancements
 
-- Payment gateway integration
+- Time-based cancellation windows and refund deductions (a follow-up phase)
+- Automatic recipe-based ingredient consumption
 - Email and SMS notifications
 - Loyalty programs and coupons
 - Multi-location kitchen support
@@ -230,7 +251,9 @@ npm run build
 
 Use [`guidance.md`](guidance.md) for the manual API and UI checklist. Bruno requests in `Endpoints Check/` cover authentication, foods, orders, and the root endpoint.
 
-Automated tests are not available yet. Running `npm test` from `server/` intentionally reports that status until Phase 8 testing work is completed.
+Run `npm test` from `server/` for automated order reliability and historical-item
+tests. Test tooling requires Node.js 20.19+; the first run downloads a MongoDB
+binary. Broader application and end-to-end test coverage remains part of Phase 8.
 
 ## Contributing
 

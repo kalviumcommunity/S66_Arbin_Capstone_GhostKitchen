@@ -15,8 +15,15 @@ export const getMyOrderById = async (orderId) => {
   return data;
 };
 
-export const createOrder = async (payload) => {
-  const { data } = await api.post("/orders", payload);
+export const createOrder = async (payload, idempotencyKey) => {
+  const { data } = await api.post("/orders", payload, {
+    headers: { "Idempotency-Key": idempotencyKey },
+  });
+  return data;
+};
+
+export const cancelOrder = async (orderId) => {
+  const { data } = await api.patch(`/orders/${orderId}/cancel`, undefined, { timeout: 45000 });
   return data;
 };
 

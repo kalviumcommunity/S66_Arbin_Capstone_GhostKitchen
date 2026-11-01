@@ -6,20 +6,38 @@ import LiveIndicator from "../components/LiveIndicator";
 import { useState } from "react";
 import WriteReviewModal from "../components/WriteReviewModal";
 import { useReviewStore } from "../stores/reviewStore";
+import { payments, payForOrder } from "../api/payments";
+import { useAuthStore } from "../stores/authStore";
+import { downloadFile } from "../utils/download";
 
 export default function MyOrders() {
   const orders = useOrderStore((state) => state.orders);
   const loading = useOrderStore((state) => state.loading);
   const error = useOrderStore((state) => state.error);
   const fetchMyOrders = useOrderStore((state) => state.fetchMyOrders);
+  const cancelOrder = useOrderStore((state) => state.cancelOrder);
+  const cancellingId = useOrderStore((state) => state.cancellingId);
   const addItem = useCartStore((state) => state.addItem);
   const submitReview = useReviewStore((state) => state.submitReview);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewError, setReviewError] = useState("");
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const upsertOrder = useOrderStore((state) => state.upsertOrderFromRealtime);
+  const handlePayment = async (order, action) => {
+    if (paymentBusy) return;
+    setPaymentBusy(true); setPaymentError("");
+    try {
+      if (action === "receipt") await downloadFile(`/payments/${order._id}/receipt`, `receipt-GK-${order._id}.html`);
+      else upsertOrder(action === "pay" ? await payForOrder(order, user) : await payments.reconcile(order._id));
+    } catch (error) { setPaymentError(error.response?.data?.message || error.message || "Unable to update payment."); }
+    finally { setPaymentBusy(false); }
+  };
 
   const handleReorder = (order) => {
     if (!order?.foods?.length) return;
-    order.foods.forEach((food) => addItem(food));
+    order.foods.filter((food) => food && food.isAvailable !== false).forEach((food) => addItem(food));
   };
 
   useEffect(() => {
@@ -47,15 +65,16 @@ export default function MyOrders() {
       {loading ? <p className="mt-4 text-slate-600">Loading orders...</p> : null}
       {error ? <p className="mt-4 rounded-md bg-red-50 p-3 text-red-700">{error}</p> : null}
       {reviewError ? <p className="mt-4 rounded-md bg-red-50 p-3 text-red-700">{reviewError}</p> : null}
+      {paymentError ? <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-red-700">{paymentError}</p> : null}
 
       {!loading && !error && !orders.length ? (
         <p className="mt-4 text-slate-600">No orders yet.</p>
       ) : null}
 
-      {!loading && !error && orders.length ? (
+      {!loading && orders.length ? (
         <div className="mt-6 space-y-4">
           {orders.map((order) => (
-            <OrderCard key={order._id} order={order} onReorder={handleReorder} />
+            <OrderCard key={order._id} order={order} onReorder={handleReorder} onCancel={cancelOrder} cancelling={cancellingId === order._id} cancelDisabled={cancellingId !== null || paymentBusy} paymentBusy={paymentBusy || cancellingId !== null} onPayment={(order) => handlePayment(order, "pay")} onCheckPayment={(order) => handlePayment(order, "check")} onReceipt={(order) => handlePayment(order, "receipt")} />
           ))}
         </div>
       ) : null}
