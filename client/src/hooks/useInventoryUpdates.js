@@ -22,9 +22,12 @@ export const useInventoryUpdates = () => {
     };
 
     socket.on("inventory:changed", onInventoryChanged);
+    const onIngredientsChanged = () => pushNotification({ type: "inventory", message: "Ingredient stock updated. Check ingredient inventory for low-stock alerts." });
+    socket.on("ingredients:changed", onIngredientsChanged);
 
     return () => {
       socket.off("inventory:changed", onInventoryChanged);
+      socket.off("ingredients:changed", onIngredientsChanged);
     };
   }, [socket, user, fetchInventory, pushNotification]);
 };

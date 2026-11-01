@@ -3,7 +3,7 @@ import OrderStatusBadge from "./OrderStatusBadge";
 import { Link } from "react-router-dom";
 import { getOrderItems } from "../utils/orderItems";
 
-export default function OrderCard({ order, onReorder, onCancel, cancelling, cancelDisabled }) {
+export default function OrderCard({ order, onReorder, onCancel, cancelling, cancelDisabled, onPayment, onCheckPayment, onReceipt, paymentBusy }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -33,7 +33,13 @@ export default function OrderCard({ order, onReorder, onCancel, cancelling, canc
             {cancelling ? "Cancelling..." : "Cancel Order"}
           </button>
         ) : null}
+        {order.paymentMethod === "razorpay" && order.status === "pending" && order.paymentStatus === "pending" ? <button type="button" disabled={paymentBusy} onClick={() => onPayment(order)} className="rounded-md bg-brand-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">Pay online</button> : null}
+        {order.paymentMethod === "razorpay" ? <button type="button" disabled={paymentBusy} onClick={() => onCheckPayment(order)} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-60">Check payment / refund</button> : null}
+        {order.receiptAvailable ? <button type="button" disabled={paymentBusy} onClick={() => onReceipt(order)} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-60">Download receipt</button> : null}
       </div>
+      <p className="mt-3 text-sm text-slate-600">{order.paymentMethod === "razorpay" ? "Online (test mode)" : "Cash on delivery"} · Payment: {(order.paymentStatus || "unpaid").replaceAll("_", " ")}</p>
+      {order.payment?.refundStatus ? <p className="mt-1 text-sm text-slate-600">Refund: {order.payment.refundStatus}{order.payment.refundId ? ` · ${order.payment.refundId}` : ""}</p> : null}
+      {order.status === "pending" && order.paymentStatus === "pending" && order.paymentExpiresAt ? <p className="mt-1 text-sm text-slate-600">Payment reservation expires {new Date(order.paymentExpiresAt).toLocaleString()}.</p> : null}
     </article>
   );
 }

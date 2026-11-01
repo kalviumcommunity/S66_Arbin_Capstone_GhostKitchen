@@ -1,6 +1,10 @@
 import Food from "../models/foodModel.js";
 import Order from "../models/orderModel.js";
 
+// New orders count as revenue only after capture/collection. Preserve completed
+// legacy orders which predate payment tracking; cancelled/refunded sales are excluded.
+const paidSales = { status: { $ne: "cancelled" }, $or: [{ paymentStatus: "paid" }, { paymentStatus: { $exists: false }, status: "completed" }] };
+
 export const getDashboardStats = async (req, res) => {
   try {
     const [foodsCount, ordersCount, pendingOrders, completedOrders, revenueAgg, latestOrders] = await Promise.all([
@@ -8,7 +12,7 @@ export const getDashboardStats = async (req, res) => {
       Order.countDocuments(),
       Order.countDocuments({ status: "pending" }),
       Order.countDocuments({ status: "completed" }),
-      Order.aggregate([{ $group: { _id: null, total: { $sum: "$totalPrice" } } }]),
+      Order.aggregate([{ $match: paidSales }, { $group: { _id: null, total: { $sum: "$totalPrice" } } }]),
       Order.find().sort({ createdAt: -1 }).limit(5).populate("foods", "name price").lean(),
     ]);
 
@@ -22,7 +26,7 @@ export const getDashboardStats = async (req, res) => {
         { $sort: { count: -1 } },
       ]),
       Order.aggregate([
-        { $match: { status: { $ne: "cancelled" } } },
+        { $match: paidSales },
         { $set: { normalizedFoods: { $cond: [{ $isArray: "$foods" }, "$foods", []] } } },
         { $set: { foodCount: { $size: "$normalizedFoods" } } },
         { $match: { foodCount: { $gt: 0 } } },

@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { useOwnerOrderStore } from "../../stores/ownerOrderStore";
 import { getOrderItems } from "../../utils/orderItems";
 import { formatPrice } from "../../utils/formatPrice";
+import { payments } from "../../api/payments";
+import { downloadFile } from "../../utils/download";
 
 const statusLabels = { completed: "Completed", preparing: "On Process", cancelled: "Cancelled", pending: "Pending", ready: "Ready" };
 const actionLabels = { preparing: "Start preparing", ready: "Mark ready", completed: "Mark completed", cancelled: "Cancel order" };
@@ -67,10 +69,22 @@ export default function OwnerOrders() {
     catch (error) { setActionError(error.message); await fetchOrders(); }
     finally { setUpdatingId(null); }
   };
+  const paymentAction = async (order, action) => {
+    if (updatingId) return;
+    setUpdatingId(order?._id || "maintenance"); setActionError("");
+    try {
+      if (action === "receipt") await downloadFile(`/payments/${order._id}/receipt`, `receipt-GK-${order._id}.html`);
+      else if (action === "maintenance") await payments.maintenance();
+      else await payments[action](order._id);
+      await fetchOrders();
+    } catch (error) { setActionError(error.response?.data?.message || error.message || "Payment action failed."); }
+    finally { setUpdatingId(null); }
+  };
 
   return <div className="orders-page">
     <div className="page-heading">
       <div><div className="orders-breadcrumb"><span>Dashboard</span><b>/</b><strong>Orders</strong></div><h1>Orders <span className="live-pill"><i /> Live</span></h1><p>Track, manage, and fulfill every order from one place.</p></div>
+      <button type="button" className="outline-btn" disabled={updatingId !== null} onClick={() => paymentAction(null, "maintenance")}>Reconcile payments & expired checkouts</button>
     </div>
 
     <section className="order-summary-grid">
@@ -98,6 +112,16 @@ export default function OwnerOrders() {
       </li>)}</ul>
       {!detail.items?.length ? <p className="text-sm">Legacy order: original item prices are unavailable.</p> : null}
       <strong>Total: {formatPrice(detail.totalPrice)}</strong>
+      <p className="my-3">{detail.paymentMethod === "razorpay" ? "Razorpay test mode" : "Cash on delivery"} · Payment: {(detail.paymentStatus || "unpaid").replaceAll("_", " ")}</p>
+      {detail.payment?.paymentId ? <p className="text-sm">Transaction: {detail.payment.paymentId}</p> : null}
+      {detail.payment?.refundStatus ? <p className="text-sm">Refund: {detail.payment.refundStatus} {detail.payment.refundId || ""}</p> : null}
+      {detail.payment?.refundError ? <p role="status" className="text-sm text-red-700">{detail.payment.refundError}</p> : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {detail.paymentMethod === "cod" && detail.paymentStatus === "unpaid" && ["ready", "completed"].includes(detail.status) ? <button type="button" className="primary-btn" disabled={updatingId !== null} onClick={() => paymentAction(detail, "collectCash")}>Record cash collected</button> : null}
+        {detail.paymentMethod === "razorpay" ? <button type="button" className="outline-btn" disabled={updatingId !== null} onClick={() => paymentAction(detail, "reconcile")}>Check payment / refund</button> : null}
+        {["refund_failed", "refund_pending"].includes(detail.paymentStatus) ? <button type="button" className="primary-btn" disabled={updatingId !== null} onClick={() => paymentAction(detail, "refund")}>Retry / reconcile full refund</button> : null}
+        {detail.receiptAvailable ? <button type="button" className="outline-btn" disabled={updatingId !== null} onClick={() => paymentAction(detail, "receipt")}>Download receipt</button> : null}
+      </div>
     </section> : null}
 
     <section className="panel orders-table-panel">
@@ -120,7 +144,7 @@ export default function OwnerOrders() {
           <td><span className={`type-label type-${orderType(order).toLowerCase()}`}>{orderType(order)}</span></td>
           <td className="address-cell">{order.address || "—"}</td>
           <td><b>{order.displayItems[0]?.name || "Unavailable menu item"}</b><small className="order-time">{quantity(order.displayItems)} {quantity(order.displayItems) === 1 ? "item" : "items"}</small></td>
-          <td><b className="amount-cell">{formatPrice(order.totalPrice)}</b></td>
+          <td><b className="amount-cell">{formatPrice(order.totalPrice)}</b><small className="order-time">{order.paymentMethod === "razorpay" ? "Online" : "COD"} · {(order.paymentStatus || "unpaid").replaceAll("_", " ")}</small></td>
           <td><span className={`status status-${order.status}`}>{statusLabels[order.status] || order.status}</span></td>
           <td className="action-cell">
             <button type="button" className="row-menu-button" disabled={updatingId !== null} aria-label={`Actions for ${orderId(order._id)}`} aria-expanded={openMenu === order._id} onClick={() => setOpenMenu(openMenu === order._id ? null : order._id)}>•••</button>

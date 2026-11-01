@@ -23,7 +23,7 @@ export const createOrder = async (payload, idempotencyKey) => {
 };
 
 export const cancelOrder = async (orderId) => {
-  const { data } = await api.patch(`/orders/${orderId}/cancel`);
+  const { data } = await api.patch(`/orders/${orderId}/cancel`, undefined, { timeout: 45000 });
   return data;
 };
 
